@@ -163,9 +163,17 @@ public class SearchCompiler {
 
                 try {
                     this.keyPattern = Pattern.compile(key, searchFlags);
+                } catch (PatternSyntaxException e) {
+                    throw new ParseError(tr(rxErrorMsg, e.getPattern(), e.getIndex(), e.getMessage()));
+                } catch (Exception e) {
+                    throw new ParseError(tr(rxErrorMsg, key, tr("<unknown>"), e.getMessage()));
+                }
+                try {
                     this.valuePattern = Pattern.compile(value, searchFlags);
                 } catch (PatternSyntaxException e) {
                     throw new ParseError(tr(rxErrorMsg, e.getPattern(), e.getIndex(), e.getMessage()));
+                } catch (Exception e) {
+                    throw new ParseError(tr(rxErrorMsg, value, tr("<unknown>"), e.getMessage()));
                 }
                 this.key = key;
                 this.value = value;
@@ -285,15 +293,23 @@ public class SearchCompiler {
             }
 
             if (regexp && key.length() > 0 && !key.equals("*")) {
-                keyPattern = Pattern.compile(key);
+                try {
+                    keyPattern = Pattern.compile(key, regexFlags(false));
+                } catch (PatternSyntaxException e) {
+                    throw new ParseError(tr(rxErrorMsg, e.getPattern(), e.getIndex(), e.getMessage()));
+                } catch (Exception e) {
+                    throw new ParseError(tr(rxErrorMsg, key, tr("<unknown>"), e.getMessage()));
+                }
             } else {
                 keyPattern = null;
             }
             if (regexp && this.value.length() > 0 && !this.value.equals("*")) {
                 try {
-                    valuePattern = Pattern.compile(this.value);
+                    valuePattern = Pattern.compile(this.value, regexFlags(false));
                 } catch (PatternSyntaxException e) {
-                    throw new ParseError(tr("Pattern Syntax Error: Pattern {0} in {1} is illegal!", e.getPattern(), value));
+                    throw new ParseError(tr(rxErrorMsg, e.getPattern(), e.getIndex(), e.getMessage()));
+                } catch (Exception e) {
+                    throw new ParseError(tr(rxErrorMsg, value, tr("<unknown>"), e.getMessage()));
                 }
             } else {
                 valuePattern = null;
@@ -368,6 +384,8 @@ public class SearchCompiler {
                     this.searchRegex = Pattern.compile(s, regexFlags(caseSensitive));
                 } catch (PatternSyntaxException e) {
                     throw new ParseError(tr(rxErrorMsg, e.getPattern(), e.getIndex(), e.getMessage()));
+                } catch (Exception e) {
+                    throw new ParseError(tr(rxErrorMsg, s, tr("<unknown>"), e.getMessage()));
                 }
                 this.search = s;
             } else if (caseSensitive) {
