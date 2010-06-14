@@ -56,9 +56,13 @@ public class APIDataSet {
         toUpdate.clear();
         toDelete.clear();
 
+        boolean sortUpdated = false;
         for (OsmPrimitive osm :ds.allPrimitives()) {
             if (osm.get("josm/ignore") != null) {
                 continue;
+            }
+            if (osm.isUndeleted()) {
+                sortUpdated = true;
             }
             if (osm.isNew() && !osm.isDeleted()) {
                 toAdd.add(osm);
@@ -70,6 +74,9 @@ public class APIDataSet {
         }
         sortDeleted();
         sortNew();
+        if (sortUpdated) {
+            sortUpdated();
+        }
     }
 
     /**
@@ -131,6 +138,37 @@ public class APIDataSet {
                 }
         );
     }
+
+    /**
+     * Ensures that primitives are modified in the following order: Nodes, then Ways,
+     * then Relations. It's necessary for uploading undeleted objects.
+     *
+     */
+    protected void sortUpdated() {
+        Collections.sort(
+                toUpdate,
+                new Comparator<OsmPrimitive>() {
+                    public int compare(OsmPrimitive o1, OsmPrimitive o2) {
+                        if (o1 instanceof Node && o2 instanceof Node)
+                            return 0;
+                        else if (o1 instanceof Node)
+                            return -1;
+                        else if (o2 instanceof Node)
+                            return 1;
+
+                        if (o1 instanceof Way && o2 instanceof Way)
+                            return 0;
+                        else if (o1 instanceof Way && o2 instanceof Relation)
+                            return -1;
+                        else if (o2 instanceof Way && o1 instanceof Relation)
+                            return 1;
+
+                        return 0;
+                    }
+                }
+        );
+    }
+
     /**
      * initializes the API data set with the modified primitives in <code>ds</code>
      *

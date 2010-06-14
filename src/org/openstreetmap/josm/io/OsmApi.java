@@ -272,6 +272,7 @@ public class OsmApi extends OsmConnection {
             initialize(monitor);
             // normal mode (0.6 and up) returns new object version.
             ret = sendRequest("PUT", OsmPrimitiveType.from(osm).getAPIName()+"/" + osm.getId(), toXml(osm, true), monitor);
+            osm.setVisible(true);
             osm.setOsmId(osm.getId(), Integer.parseInt(ret.trim()));
             osm.setChangesetId(getChangeset().getId());
         } catch(NumberFormatException e) {
