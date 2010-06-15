@@ -123,8 +123,8 @@ public class DiffResultProcessor  {
                 }
                 processed.add(p);
                 if (!p.isDeleted()) {
-                    p.setVisible(true);
                     p.setOsmId(entry.new_id, entry.new_version);
+                    p.setVisible(true);
                 }
                 if (cs != null && !cs.isNew()) {
                     p.setChangesetId(cs.getId());

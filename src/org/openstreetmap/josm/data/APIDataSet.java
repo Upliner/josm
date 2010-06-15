@@ -61,12 +61,12 @@ public class APIDataSet {
             if (osm.get("josm/ignore") != null) {
                 continue;
             }
-            if (osm.isUndeleted()) {
-                sortUpdated = true;
-            }
             if (osm.isNew() && !osm.isDeleted()) {
                 toAdd.add(osm);
             } else if (osm.isModified() && !osm.isDeleted()) {
+                if (osm.isUndeleted()) {
+                    sortUpdated = true;
+                }
                 toUpdate.add(osm);
             } else if (osm.isDeleted() && !osm.isNew() && osm.isModified()) {
                 toDelete.add(osm);
