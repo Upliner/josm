@@ -234,17 +234,25 @@ public class APIDataSet {
         toAdd.clear();
         toUpdate.clear();
         toDelete.clear();
+
+        boolean sortUpdated = false;
         for (OsmPrimitive osm: primitives) {
             if (osm.isNew() && !osm.isDeleted()) {
                 toAdd.addLast(osm);
             } else if (osm.isModified() && !osm.isDeleted()) {
                 toUpdate.addLast(osm);
+                if (osm.isUndeleted()) {
+                    sortUpdated = true;
+                }
             } else if (osm.isDeleted() && !osm.isNew() && osm.isModified()) {
                 toDelete.addFirst(osm);
             }
         }
         sortNew();
         sortDeleted();
+        if (sortUpdated) {
+            sortUpdated();
+        }
     }
 
     /**
