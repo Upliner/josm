@@ -547,6 +547,14 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
     }
 
     /**
+     *
+     * @return True if primitive was added(created or undeleted) to dataset
+     */
+    public boolean isNewOrUndeleted() {
+        return (id <= 0) || ((flags & (FLAG_VISIBLE + FLAG_DELETED)) == 0);
+    }
+
+    /**
      * Sets the id and the version of this primitive if it is known to the OSM API.
      *
      * Since we know the id and its version it can't be incomplete anymore. incomplete

@@ -56,17 +56,13 @@ public class APIDataSet {
         toUpdate.clear();
         toDelete.clear();
 
-        boolean sortUpdated = false;
         for (OsmPrimitive osm :ds.allPrimitives()) {
             if (osm.get("josm/ignore") != null) {
                 continue;
             }
-            if (osm.isNew() && !osm.isDeleted()) {
+            if (osm.isNewOrUndeleted() && !osm.isDeleted()) {
                 toAdd.add(osm);
             } else if (osm.isModified() && !osm.isDeleted()) {
-                if (osm.isUndeleted()) {
-                    sortUpdated = true;
-                }
                 toUpdate.add(osm);
             } else if (osm.isDeleted() && !osm.isNew() && osm.isModified()) {
                 toDelete.add(osm);
@@ -74,9 +70,6 @@ public class APIDataSet {
         }
         sortDeleted();
         sortNew();
-        if (sortUpdated) {
-            sortUpdated();
-        }
     }
 
     /**
@@ -138,37 +131,6 @@ public class APIDataSet {
                 }
         );
     }
-
-    /**
-     * Ensures that primitives are modified in the following order: Nodes, then Ways,
-     * then Relations. It's necessary for uploading undeleted objects.
-     *
-     */
-    protected void sortUpdated() {
-        Collections.sort(
-                toUpdate,
-                new Comparator<OsmPrimitive>() {
-                    public int compare(OsmPrimitive o1, OsmPrimitive o2) {
-                        if (o1 instanceof Node && o2 instanceof Node)
-                            return 0;
-                        else if (o1 instanceof Node)
-                            return -1;
-                        else if (o2 instanceof Node)
-                            return 1;
-
-                        if (o1 instanceof Way && o2 instanceof Way)
-                            return 0;
-                        else if (o1 instanceof Way && o2 instanceof Relation)
-                            return -1;
-                        else if (o2 instanceof Way && o1 instanceof Relation)
-                            return 1;
-
-                        return 0;
-                    }
-                }
-        );
-    }
-
     /**
      * initializes the API data set with the modified primitives in <code>ds</code>
      *
@@ -234,25 +196,17 @@ public class APIDataSet {
         toAdd.clear();
         toUpdate.clear();
         toDelete.clear();
-
-        boolean sortUpdated = false;
         for (OsmPrimitive osm: primitives) {
-            if (osm.isNew() && !osm.isDeleted()) {
+            if (osm.isNewOrUndeleted() && !osm.isDeleted()) {
                 toAdd.addLast(osm);
             } else if (osm.isModified() && !osm.isDeleted()) {
                 toUpdate.addLast(osm);
-                if (osm.isUndeleted()) {
-                    sortUpdated = true;
-                }
             } else if (osm.isDeleted() && !osm.isNew() && osm.isModified()) {
                 toDelete.addFirst(osm);
             }
         }
         sortNew();
         sortDeleted();
-        if (sortUpdated) {
-            sortUpdated();
-        }
     }
 
     /**
@@ -357,7 +311,7 @@ public class APIDataSet {
         for (Relation relation: relations) {
             boolean refersToNewRelation = false;
             for (RelationMember m : relation.getMembers()) {
-                if (m.isRelation() && m.getMember().isNew()) {
+                if (m.isRelation() && m.getMember().isNewOrUndeleted()) {
                     refersToNewRelation = true;
                     break;
                 }
@@ -395,12 +349,12 @@ public class APIDataSet {
         public void build(Collection<Relation> relations) {
             this.relations = new HashSet<Relation>();
             for(Relation relation: relations) {
-                if (!relation.isNew() ) {
+                if (!relation.isNewOrUndeleted() ) {
                     continue;
                 }
                 this.relations.add(relation);
                 for (RelationMember m: relation.getMembers()) {
-                    if (m.isRelation() && m.getMember().isNew()) {
+                    if (m.isRelation() && m.getMember().isNewOrUndeleted()) {
                         addDependency(relation, (Relation)m.getMember());
                     }
                 }

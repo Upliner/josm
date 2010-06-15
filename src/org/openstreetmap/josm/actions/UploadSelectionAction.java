@@ -77,7 +77,7 @@ public class UploadSelectionAction extends JosmAction{
     protected Set<OsmPrimitive> getModifiedPrimitives(Collection<OsmPrimitive> primitives) {
         HashSet<OsmPrimitive> ret = new HashSet<OsmPrimitive>();
         for (OsmPrimitive p: primitives) {
-            if (p.isNew()) {
+            if (p.isNewOrUndeleted()) {
                 ret.add(p);
             } else if (p.isModified() && !p.isIncomplete()) {
                 ret.add(p);
@@ -185,14 +185,14 @@ public class UploadSelectionAction extends JosmAction{
         }
 
         public void visit(Node n) {
-            if (n.isNew() || n.isModified() || n.isDeleted()) {
+            if (n.isNewOrUndeleted() || n.isModified() || n.isDeleted()) {
                 // upload new nodes as well as modified and deleted ones
                 hull.add(n);
             }
         }
 
         public void visit(Way w) {
-            if (w.isNew() || w.isModified() || w.isDeleted()) {
+            if (w.isNewOrUndeleted() || w.isModified() || w.isDeleted()) {
                 // upload new ways as well as modified and deleted ones
                 hull.add(w);
                 for (Node n: w.getNodes()) {
@@ -204,14 +204,14 @@ public class UploadSelectionAction extends JosmAction{
         }
 
         public void visit(Relation r) {
-            if (r.isNew() || r.isModified() || r.isDeleted()) {
+            if (r.isNewOrUndeleted() || r.isModified() || r.isDeleted()) {
                 hull.add(r);
                 for (OsmPrimitive p : r.getMemberPrimitives()) {
                     // add new relation members. Don't include modified
                     // relation members. r shouldn't refer to deleted primitives,
                     // so wont check here for deleted primitives here
                     //
-                    if (p.isNew()) {
+                    if (p.isNewOrUndeleted()) {
                         p.visit(this);
                     }
                 }
@@ -293,7 +293,7 @@ public class UploadSelectionAction extends JosmAction{
         protected Set<OsmPrimitive> getPrimitivesToCheckForParents() {
             HashSet<OsmPrimitive> ret = new HashSet<OsmPrimitive>();
             for (OsmPrimitive p: toUpload) {
-                if (p.isDeleted() && !p.isNew()) {
+                if (p.isDeleted() && !p.isNewOrUndeleted()) {
                     ret.add(p);
                 }
             }
