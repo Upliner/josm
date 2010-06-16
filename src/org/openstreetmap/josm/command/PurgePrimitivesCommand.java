@@ -35,6 +35,7 @@ import org.openstreetmap.josm.tools.ImageProvider;
  * which would result in an non resolvable conflict.
  *
  */
+@Deprecated
 public class PurgePrimitivesCommand extends ConflictResolveCommand{
 
     static private final Logger logger = Logger.getLogger(PurgePrimitivesCommand.class.getName());
@@ -96,16 +97,15 @@ public class PurgePrimitivesCommand extends ConflictResolveCommand{
     }
 
     @Override public JLabel getDescription() {
-        if (purgedPrimitives.size() == 1) {
+        if (purgedPrimitives.size() == 1)
             return new JLabel(
-                tr("Purged object ''{0}''",
-                        purgedPrimitives.iterator().next().getDisplayName(DefaultNameFormatter.getInstance())),
-                ImageProvider.get("data", "object"),
-                JLabel.HORIZONTAL
+                    tr("Purged object ''{0}''",
+                            purgedPrimitives.iterator().next().getDisplayName(DefaultNameFormatter.getInstance())),
+                            ImageProvider.get("data", "object"),
+                            JLabel.HORIZONTAL
             );
-        } else {
+        else
             return new JLabel(trn("Purged {0} object", "Purged {0} objects", purgedPrimitives.size(), purgedPrimitives.size()));
-        }
     }
 
     @Override public Collection<PseudoCommand> getChildren() {
@@ -116,10 +116,10 @@ public class PurgePrimitivesCommand extends ConflictResolveCommand{
             children.add(new PseudoCommand() {
                 @Override public JLabel getDescription() {
                     return new JLabel(
-                        tr("Purged object ''{0}''",
-                                osm.getDisplayName(DefaultNameFormatter.getInstance())),
-                        ImageProvider.get("data", "object"),
-                        JLabel.HORIZONTAL
+                            tr("Purged object ''{0}''",
+                                    osm.getDisplayName(DefaultNameFormatter.getInstance())),
+                                    ImageProvider.get("data", "object"),
+                                    JLabel.HORIZONTAL
                     );
                 }
                 @Override public Collection<? extends OsmPrimitive> getParticipatingPrimitives() {

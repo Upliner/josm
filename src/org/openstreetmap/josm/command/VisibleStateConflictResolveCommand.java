@@ -10,14 +10,13 @@ import javax.swing.JLabel;
 import org.openstreetmap.josm.data.conflict.Conflict;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.conflict.pair.MergeDecisionType;
-import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.tools.ImageProvider;
 
 /**
- * Represents a the resolution of a conflict between deleted and not deleted {@see OsmPrimitive}s
+ * Represents a the resolution of a conflict between two {@see OsmPrimitive}s one of which has wrong "visible" property
  *
  */
-public class DeletedStateConflictResolveCommand extends ConflictResolveCommand {
+public class VisibleStateConflictResolveCommand extends ConflictResolveCommand {
 
     /** the conflict to resolve */
     private Conflict<? extends OsmPrimitive> conflict;
@@ -32,7 +31,7 @@ public class DeletedStateConflictResolveCommand extends ConflictResolveCommand {
      * @param their  their node
      * @param decision the merge decision
      */
-    public DeletedStateConflictResolveCommand(Conflict<? extends OsmPrimitive> conflict, MergeDecisionType decision) {
+    public VisibleStateConflictResolveCommand(Conflict<? extends OsmPrimitive> conflict, MergeDecisionType decision) {
         this.conflict = conflict;
         this.decision = decision;
     }
@@ -52,28 +51,23 @@ public class DeletedStateConflictResolveCommand extends ConflictResolveCommand {
         //
         super.executeCommand();
 
-        OsmDataLayer layer = getLayer();
-
         if (decision.equals(MergeDecisionType.KEEP_MINE)) {
-            if (conflict.getMy().isDeleted() || conflict.isMyDeleted()) {
-                // because my was involved in a conflict it my still be referred
-                // to from a way or a relation. Fix this now.
-                //
-                layer.data.unlinkReferencesToPrimitive(conflict.getMy());
-                conflict.getMy().setDeleted(true);
-            }
+            // do nothing
         } else if (decision.equals(MergeDecisionType.KEEP_THEIR)) {
-            if (conflict.getTheir().isDeleted()) {
-                layer.data.unlinkReferencesToPrimitive(conflict.getMy());
-                conflict.getMy().setDeleted(true);
-            } else {
-                conflict.getMy().setDeleted(false);
+            OsmPrimitive my = conflict.getMy();
+            boolean visible = conflict.getTheir().isVisible();
+            my.setVisible(visible);
+            if (!visible) {
+                my.setModified(!my.isDeleted());
             }
         } else
             // should not happen
             throw new IllegalStateException(tr("Cannot resolve undecided conflict."));
 
+        // remember the layer this command was applied to
+        //
         rememberConflict(conflict);
+
         return true;
     }
 
@@ -81,6 +75,5 @@ public class DeletedStateConflictResolveCommand extends ConflictResolveCommand {
     public void fillModifiedData(Collection<OsmPrimitive> modified, Collection<OsmPrimitive> deleted,
             Collection<OsmPrimitive> added) {
         modified.add(conflict.getMy());
-        modified.addAll(conflict.getMy().getReferrers());
     }
 }

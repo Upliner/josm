@@ -25,6 +25,7 @@ import org.openstreetmap.josm.tools.ImageProvider;
  * the node into a new node which can be uploaded to the server.
  *
  */
+@Deprecated
 public class UndeletePrimitivesCommand extends ConflictResolveCommand {
     //static private final Logger logger = Logger.getLogger(UndeletePrimitivesCommand.class.getName());
 
@@ -61,9 +62,9 @@ public class UndeletePrimitivesCommand extends ConflictResolveCommand {
 
     @Override public JLabel getDescription() {
         return new JLabel(
-                        trn("Undelete {0} primitive", "Undelete {0} primitives", toUndelete.size(), toUndelete.size()),
-                        ImageProvider.get("data", "object"),
-                        JLabel.HORIZONTAL
+                trn("Undelete {0} primitive", "Undelete {0} primitives", toUndelete.size(), toUndelete.size()),
+                ImageProvider.get("data", "object"),
+                JLabel.HORIZONTAL
         );
     }
 

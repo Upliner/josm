@@ -38,7 +38,6 @@ import javax.swing.JTextArea;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.RenameLayerAction;
-import org.openstreetmap.josm.command.PurgePrimitivesCommand;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.SelectionChangedListener;
 import org.openstreetmap.josm.data.conflict.Conflict;
@@ -325,15 +324,11 @@ public class OsmDataLayer extends Layer implements Listener, SelectionChangedLis
                 conflicts.add(c);
             }
         }
-        PurgePrimitivesCommand cmd = buildPurgeCommand();
-        if (cmd != null) {
-            Main.main.undoRedo.add(cmd);
-        }
         // repaint to make sure new data is displayed properly.
         Main.map.mapView.repaint();
         warnNumNewConflicts(
                 numNewConflicts,
-                cmd == null ? 0 : cmd.getPurgedPrimitives().size()
+                0
         );
     }
 
@@ -402,49 +397,6 @@ public class OsmDataLayer extends Layer implements Listener, SelectionChangedLis
         }
     }
 
-    /**
-     * Builds the purge command for primitives which can be purged automatically
-     * from the local dataset because they've been deleted on the
-     * server.
-     *
-     * @return the purge command. <code>null</code> if no primitives have to
-     * be purged
-     */
-    protected PurgePrimitivesCommand buildPurgeCommand() {
-        ArrayList<OsmPrimitive> toPurge = new ArrayList<OsmPrimitive>();
-        conflictLoop:
-            for (Conflict<?> c: conflicts) {
-                if (c.getMy().isDeleted() && !c.getTheir().isVisible()) {
-                    // Local and server version of the primitive are deleted. We
-                    // can purge it from the local dataset.
-                    //
-                    toPurge.add(c.getMy());
-                } else if (!c.getMy().isModified() && ! c.getTheir().isVisible()) {
-                    // We purge deleted *ways* and *relations* automatically if they are
-                    // deleted on the server and if they aren't modified in the local
-                    // dataset.
-                    //
-                    if (c.getMy() instanceof Way || c.getMy() instanceof Relation) {
-                        toPurge.add(c.getMy());
-                        continue conflictLoop;
-                    }
-                    // We only purge nodes if they aren't part of a modified way.
-                    // Otherwise the number of nodes of a modified way could drop
-                    // below 2 and we would lose the modified data when the way
-                    // gets purged.
-                    //
-                    for (OsmPrimitive parent: c.getMy().getReferrers()) {
-                        if (parent.isModified() && parent instanceof Way) {
-                            continue conflictLoop;
-                        }
-                    }
-                    toPurge.add(c.getMy());
-                }
-            }
-        if (toPurge.isEmpty()) return null;
-        PurgePrimitivesCommand cmd = new PurgePrimitivesCommand(this, toPurge);
-        return cmd;
-    }
 
     @Override public boolean isMergable(final Layer other) {
         return other instanceof OsmDataLayer;

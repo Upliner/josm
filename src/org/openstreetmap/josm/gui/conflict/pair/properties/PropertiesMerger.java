@@ -18,7 +18,6 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.openstreetmap.josm.data.conflict.Conflict;
@@ -620,37 +619,11 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         }
 
         public void actionPerformed(ActionEvent e) {
-            if (confirmKeepMine()) {
-                model.decideVisibleStateConflict(MergeDecisionType.KEEP_MINE);
-            }
+            model.decideVisibleStateConflict(MergeDecisionType.KEEP_MINE);
         }
 
         public void update(Observable o, Object arg) {
             setEnabled(model.hasVisibleStateConflict() && ! model.isDecidedVisibleState());
-        }
-
-        protected boolean confirmKeepMine() {
-            String [] options = {
-                    tr("Yes, reset the id"),
-                    tr("No, abort")
-            };
-            int ret = JOptionPane.showOptionDialog(
-                    null,
-                    tr("<html>To keep your local version, JOSM<br>"
-                            + "has to reset the id of primitive {0} to 0.<br>"
-                            + "On the next upload the server will assign<br>"
-                            + "it a new id.<br>"
-                            + "Do you agree?</html>",
-                            model.getMyPrimitive().getId()
-                    ),
-                    tr("Reset id to 0"),
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    options,
-                    options[1]
-            );
-            return ret == JOptionPane.YES_OPTION;
         }
     }
 
@@ -661,36 +634,13 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         }
 
         public void actionPerformed(ActionEvent e) {
-            if (confirmKeepTheir()){
-                model.decideVisibleStateConflict(MergeDecisionType.KEEP_THEIR);
-            }
+            model.decideVisibleStateConflict(MergeDecisionType.KEEP_THEIR);
         }
 
         public void update(Observable o, Object arg) {
             setEnabled(model.hasVisibleStateConflict() && ! model.isDecidedVisibleState());
         }
 
-        protected boolean confirmKeepTheir() {
-            String [] options = {
-                    tr("Yes, purge it"),
-                    tr("No, abort")
-            };
-            int ret = JOptionPane.showOptionDialog(
-                    null,
-                    tr("<html>JOSM will have to remove your local primitive with id {0}<br>"
-                            + "from the dataset.<br>"
-                            + "Do you agree?</html>",
-                            model.getMyPrimitive().getId()
-                    ),
-                    tr("Remove from dataset"),
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    options,
-                    options[1]
-            );
-            return ret == JOptionPane.YES_OPTION;
-        }
     }
 
     class UndecideVisibleStateConflictAction extends AbstractAction implements Observer {

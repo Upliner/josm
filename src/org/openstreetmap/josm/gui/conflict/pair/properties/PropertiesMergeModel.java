@@ -2,37 +2,23 @@
 package org.openstreetmap.josm.gui.conflict.pair.properties;
 
 import static org.openstreetmap.josm.gui.conflict.pair.MergeDecisionType.UNDECIDED;
-import static org.openstreetmap.josm.tools.I18n.tr;
-import static org.openstreetmap.josm.tools.I18n.trn;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Observable;
 
-import javax.swing.JOptionPane;
-
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.CoordinateConflictResolveCommand;
 import org.openstreetmap.josm.command.DeletedStateConflictResolveCommand;
-import org.openstreetmap.josm.command.PurgePrimitivesCommand;
-import org.openstreetmap.josm.command.UndeletePrimitivesCommand;
+import org.openstreetmap.josm.command.VisibleStateConflictResolveCommand;
 import org.openstreetmap.josm.data.conflict.Conflict;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.osm.Relation;
-import org.openstreetmap.josm.data.osm.RelationMember;
-import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.conflict.pair.MergeDecisionType;
-import org.openstreetmap.josm.gui.progress.NullProgressMonitor;
-import org.openstreetmap.josm.io.MultiFetchServerObjectReader;
-import org.openstreetmap.josm.io.OsmTransferException;
 import org.openstreetmap.josm.tools.CheckParameterUtil;
 
 /**
@@ -420,23 +406,10 @@ public class PropertiesMergeModel extends Observable {
      * @param their their primitive
      * @return the list of commands
      */
-    public List<Command> buildResolveCommand(Conflict<? extends OsmPrimitive> conflict) throws OperationCancelledException{
-        OsmPrimitive my = conflict.getMy();
+    public List<Command> buildResolveCommand(Conflict<? extends OsmPrimitive> conflict) {
         List<Command> cmds = new ArrayList<Command>();
         if (hasVisibleStateConflict() && isDecidedVisibleState()) {
-            if (isVisibleStateDecision(MergeDecisionType.KEEP_MINE)) {
-                try {
-                    UndeletePrimitivesCommand cmd = createUndeletePrimitiveCommand(my);
-                    if (cmd == null)
-                        throw new OperationCancelledException();
-                    cmds.add(cmd);
-                } catch(OsmTransferException e) {
-                    handleExceptionWhileBuildingCommand(e);
-                    throw new OperationCancelledException(e);
-                }
-            } else if (isVisibleStateDecision(MergeDecisionType.KEEP_THEIR)) {
-                cmds.add(new PurgePrimitivesCommand(my));
-            }
+            cmds.add(new VisibleStateConflictResolveCommand(conflict, visibleMergeDecision));
         }
         if (hasCoordConflict() && isDecidedCoord()) {
             cmds.add(new CoordinateConflictResolveCommand(conflict, coordMergeDecision));
@@ -449,203 +422,6 @@ public class PropertiesMergeModel extends Observable {
 
     public OsmPrimitive getMyPrimitive() {
         return my;
-    }
-
-    /**
-     *
-     * @param id
-     */
-    protected void handleExceptionWhileBuildingCommand(Exception e) {
-        e.printStackTrace();
-        String msg = e.getMessage() != null ? e.getMessage() : e.toString();
-        msg = msg.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-        JOptionPane.showMessageDialog(
-                Main.parent,
-                tr("<html>An error occurred while communicating with the server<br>"
-                        + "Details: {0}</html>",
-                        msg
-                ),
-                tr("Communication with server failed"),
-                JOptionPane.ERROR_MESSAGE
-        );
-    }
-
-    /**
-     * User has decided to keep his local version of a primitive which had been deleted
-     * on the server
-     *
-     * @param id the primitive id
-     */
-    protected UndeletePrimitivesCommand createUndeletePrimitiveCommand(OsmPrimitive my) throws OsmTransferException {
-        if (my instanceof Node)
-            return createUndeleteNodeCommand((Node)my);
-        else if (my instanceof Way)
-            return createUndeleteWayCommand((Way)my);
-        else if (my instanceof Relation)
-            return createUndeleteRelationCommand((Relation)my);
-        return null;
-    }
-    /**
-     * Undelete a node which is already deleted on the server. The API
-     * doesn't offer a call for "undeleting" a node. We therefore create
-     * a clone of the node which we flag as new. On the next upload the
-     * server will assign the node a new id.
-     *
-     * @param node the node to undelete
-     */
-    protected UndeletePrimitivesCommand  createUndeleteNodeCommand(Node node) {
-        return new UndeletePrimitivesCommand(node);
-    }
-
-    /**
-     * displays a confirmation message. The user has to confirm that additional dependent
-     * nodes should be undeleted too.
-     *
-     * @param way  the way
-     * @param dependent a list of dependent nodes which have to be undelete too
-     * @return true, if the user confirms; false, otherwise
-     */
-    protected boolean confirmUndeleteDependentPrimitives(Way way, ArrayList<OsmPrimitive> dependent) {
-        String [] options = {
-                tr("Yes, undelete them too"),
-                tr("No, cancel operation")
-        };
-        int ret = JOptionPane.showOptionDialog(
-                Main.parent,
-                "<html>" + trn("There is {0} additional node used by way {1}<br>"
-                        + "which is deleted on the server."
-                        + "<br><br>"
-                        + "Do you want to undelete this node too?",
-                        "There are {0} additional nodes used by way {1}<br>"
-                        + "which are deleted on the server."
-                        + "<br><br>"
-                        + "Do you want to undelete these nodes too?",
-                        dependent.size(), dependent.size(), way.getId())
-                        + "</html>",
-                        tr("Undelete additional nodes?"),
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        options,
-                        options[0]
-        );
-
-        switch(ret) {
-        case JOptionPane.CLOSED_OPTION: return false;
-        case JOptionPane.YES_OPTION: return true;
-        case JOptionPane.NO_OPTION: return false;
-        }
-        return false;
-
-    }
-
-    protected boolean confirmUndeleteDependentPrimitives(Relation r, ArrayList<OsmPrimitive> dependent) {
-        String [] options = {
-                tr("Yes, undelete them too"),
-                tr("No, cancel operation")
-        };
-        int ret = JOptionPane.showOptionDialog(
-                Main.parent,
-                "<html>" + trn("There is {0} additional primitive referred to by relation {1}<br>"
-                        + "which is deleted on the server."
-                        + "<br><br>"
-                        + "Do you want to undelete this too?",
-                        "There are {0} additional primitives referred to by relation {1}<br>"
-                        + "which are deleted on the server."
-                        + "<br><br>"
-                        + "Do you want to undelete these too?",
-                        dependent.size(), dependent.size(), r.getId())
-                        + "</html>",
-                        tr("Undelete dependent primitives?"),
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        options,
-                        options[0]
-        );
-
-        switch(ret) {
-        case JOptionPane.CLOSED_OPTION: return false;
-        case JOptionPane.YES_OPTION: return true;
-        case JOptionPane.NO_OPTION: return false;
-        }
-        return false;
-
-    }
-
-    /**
-     * Creates the undelete command for a way which is already deleted on the server.
-     *
-     * This method also checks whether there are additional nodes referred to by
-     * this way which are deleted on the server too.
-     *
-     * @param way the way to undelete
-     * @return the undelete command
-     * @see #createUndeleteNodeCommand(Node)
-     */
-    protected UndeletePrimitivesCommand createUndeleteWayCommand(final Way way) throws OsmTransferException {
-
-        HashMap<Long,OsmPrimitive> candidates = new HashMap<Long,OsmPrimitive>();
-        for (Node n : way.getNodes()) {
-            if (!n.isNew() && !candidates.values().contains(n)) {
-                candidates.put(n.getId(), n);
-            }
-        }
-        MultiFetchServerObjectReader reader = new MultiFetchServerObjectReader();
-        reader.append(candidates.values());
-        DataSet ds = reader.parseOsm(NullProgressMonitor.INSTANCE);
-
-        ArrayList<OsmPrimitive> toDelete = new ArrayList<OsmPrimitive>();
-        for (OsmPrimitive their : ds.allPrimitives()) {
-            if (candidates.keySet().contains(their.getId()) && ! their.isVisible()) {
-                toDelete.add(candidates.get(their.getId()));
-            }
-        }
-        if (!toDelete.isEmpty()) {
-            if (! confirmUndeleteDependentPrimitives(way, toDelete))
-                // FIXME: throw exception ?
-                return null;
-        }
-        toDelete.add(way);
-        return new UndeletePrimitivesCommand(toDelete);
-    }
-
-    /**
-     * Creates an undelete command for a relation which is already deleted on the server.
-     *
-     * This method  checks whether there are additional primitives referred to by
-     * this relation which are already deleted on the server.
-     *
-     * @param r the relation
-     * @return the undelete command
-     * @see #createUndeleteNodeCommand(Node)
-     */
-    protected UndeletePrimitivesCommand createUndeleteRelationCommand(final Relation r) throws OsmTransferException {
-
-        HashMap<Long,OsmPrimitive> candidates = new HashMap<Long, OsmPrimitive>();
-        for (RelationMember m : r.getMembers()) {
-            if (!m.getMember().isNew() && !candidates.values().contains(m.getMember())) {
-                candidates.put(m.getMember().getId(), m.getMember());
-            }
-        }
-
-        MultiFetchServerObjectReader reader = new MultiFetchServerObjectReader();
-        reader.append(candidates.values());
-        DataSet ds = reader.parseOsm(NullProgressMonitor.INSTANCE);
-
-        ArrayList<OsmPrimitive> toDelete = new ArrayList<OsmPrimitive>();
-        for (OsmPrimitive their : ds.allPrimitives()) {
-            if (candidates.keySet().contains(their.getId()) && ! their.isVisible()) {
-                toDelete.add(candidates.get(their.getId()));
-            }
-        }
-        if (!toDelete.isEmpty()) {
-            if (! confirmUndeleteDependentPrimitives(r, toDelete))
-                // FIXME: throw exception ?
-                return null;
-        }
-        toDelete.add(r);
-        return new UndeletePrimitivesCommand(toDelete);
     }
 
 }
