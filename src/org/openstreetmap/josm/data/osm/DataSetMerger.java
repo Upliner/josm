@@ -243,7 +243,10 @@ public class DataSetMerger {
         if (target.getVersion() > source.getVersion())
             // target.version > source.version => keep target version
             return true;
-        if (target.isVisible() && ! source.isVisible()) {
+        if (! target.isVisible() && source.isVisible() && target.getVersion() == source.getVersion()) {
+            // should not happen
+            conflicts.add(target,source);
+        } else if (target.isVisible() && ! source.isVisible()) {
             // this is always a conflict because the user has to decide whether
             // he wants to create a clone of its target primitive or whether he
             // wants to purge the target from the local dataset. He can't keep it unchanged

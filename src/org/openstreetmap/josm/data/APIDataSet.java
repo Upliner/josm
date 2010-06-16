@@ -64,7 +64,7 @@ public class APIDataSet {
                 toAdd.add(osm);
             } else if (osm.isModified() && !osm.isDeleted()) {
                 toUpdate.add(osm);
-            } else if (osm.isDeleted() && !osm.isNew() && osm.isModified()) {
+            } else if (osm.isDeleted() && !osm.isNew() && osm.isModified() && osm.isVisible()) {
                 toDelete.add(osm);
             }
         }
@@ -201,7 +201,7 @@ public class APIDataSet {
                 toAdd.addLast(osm);
             } else if (osm.isModified() && !osm.isDeleted()) {
                 toUpdate.addLast(osm);
-            } else if (osm.isDeleted() && !osm.isNew() && osm.isModified()) {
+            } else if (osm.isDeleted() && !osm.isNew() && osm.isModified() && osm.isVisible()) {
                 toDelete.addFirst(osm);
             }
         }
