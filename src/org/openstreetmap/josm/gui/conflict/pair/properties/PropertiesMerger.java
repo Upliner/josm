@@ -401,15 +401,6 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
             return tr("not visible (on the server)");
     }
 
-    public String visibleStateToStringMerged(Boolean visible) {
-        if (visible == null)
-            return tr("(none)");
-        if (visible)
-            return tr("Keep a clone of the local version");
-        else
-            return tr("Physically delete from local dataset");
-    }
-
     public String referrersToString(List<OsmPrimitive> referrers) {
         if (referrers.isEmpty())
             return tr("(none)");
@@ -478,7 +469,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
 
     protected void updateVisibleState() {
         lblMyVisibleState.setText(visibleStateToString(model.getMyVisibleState()));
-        lblMergedVisibleState.setText(visibleStateToStringMerged(model.getMergedVisibleState()));
+        lblMergedVisibleState.setText(visibleStateToString(model.getMergedVisibleState()));
         lblTheirVisibleState.setText(visibleStateToString(model.getTheirVisibleState()));
 
         if (! model.hasVisibleStateConflict()) {

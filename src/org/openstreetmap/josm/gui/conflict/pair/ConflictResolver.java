@@ -25,7 +25,6 @@ import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.conflict.pair.nodes.NodeListMergeModel;
 import org.openstreetmap.josm.gui.conflict.pair.nodes.NodeListMerger;
-import org.openstreetmap.josm.gui.conflict.pair.properties.OperationCancelledException;
 import org.openstreetmap.josm.gui.conflict.pair.properties.PropertiesMergeModel;
 import org.openstreetmap.josm.gui.conflict.pair.properties.PropertiesMerger;
 import org.openstreetmap.josm.gui.conflict.pair.relation.RelationMemberListMergeModel;
@@ -269,7 +268,7 @@ public class ConflictResolver extends JPanel implements PropertyChangeListener  
      *
      * @return the resolution command
      */
-    public Command buildResolveCommand() throws OperationCancelledException {
+    public Command buildResolveCommand() {
         ArrayList<Command> commands = new ArrayList<Command>();
         if (propertiesMerger.getModel().hasVisibleStateConflict()) {
             if (propertiesMerger.getModel().isDecidedVisibleState()) {

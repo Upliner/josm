@@ -43,6 +43,7 @@ public class PropertiesMergeModel extends Observable {
     static public final String DELETE_PRIMITIVE_PROP = PropertiesMergeModel.class.getName() + ".deletePrimitive";
 
     private OsmPrimitive my;
+    private OsmPrimitive their;
 
     private LatLon myCoords;
     private LatLon theirCoords;
@@ -150,7 +151,7 @@ public class PropertiesMergeModel extends Observable {
      */
     public void populate(Conflict<? extends OsmPrimitive> conflict) {
         this.my = conflict.getMy();
-        OsmPrimitive their = conflict.getTheir();
+        this.their = conflict.getTheir();
         if (my instanceof Node) {
             myCoords = ((Node)my).getCoor();
             theirCoords = ((Node)their).getCoor();
@@ -288,6 +289,12 @@ public class PropertiesMergeModel extends Observable {
      * @return the merged visible state
      */
     public Boolean getMergedVisibleState() {
+        if (my.getVersion() != their.getVersion()) {
+            if (my.getVersion() > their.getVersion())
+                return my.isVisible();
+            else
+                return their.isVisible();
+        }
         switch(visibleMergeDecision) {
         case KEEP_MINE: return myVisibleState;
         case KEEP_THEIR: return theirVisibleState;
@@ -377,7 +384,7 @@ public class PropertiesMergeModel extends Observable {
      * their visible states
      */
     public boolean hasVisibleStateConflict() {
-        return myVisibleState != theirVisibleState;
+        return myVisibleState != theirVisibleState && my.getVersion() == their.getVersion();
     }
 
     /**
