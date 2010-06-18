@@ -246,12 +246,6 @@ public class DataSetMerger {
             // target and source are incomplete. Doesn't matter which one to
             // take. We take target.
             //
-        } else if (target.isVisible() != source.isVisible() && target.getVersion() == source.getVersion()) {
-            // same version, but visiblity state is diffferent. It means that one of primitives
-            // have wrong visiblity property.
-            // TODO: automatically fetch true visiblity state from the server
-            //
-            conflicts.add(target,source);
         } else if (target.isIncomplete() && !source.isIncomplete()) {
             // target is incomplete, source completes it
             // => merge source into target
@@ -262,6 +256,12 @@ public class DataSetMerger {
             // target is complete and source is incomplete
             // => keep target, it has more information already
             //
+        } else if (target.isVisible() != source.isVisible() && target.getVersion() == source.getVersion()) {
+            // same version, but visiblity state is diffferent. It means that one of primitives
+            // have wrong visiblity property.
+            // TODO: automatically fetch true visiblity state from the server
+            //
+            conflicts.add(target,source);
         } else if (target.isDeleted() && ! source.isDeleted() && target.getVersion() == source.getVersion()) {
             // same version, but target is deleted. Assume target takes precedence
             // otherwise too many conflicts when refreshing from the server
