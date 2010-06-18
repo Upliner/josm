@@ -246,7 +246,7 @@ public class DataSetMergerTest {
         my.addPrimitive(n);
 
         Node n1 = new Node(new LatLon(0,0));
-        n1.setOsmId(1,2);
+        n1.setOsmId(1,1);
 
         n1.setModified(false);
         n1.setVisible(false);
@@ -685,8 +685,12 @@ public class DataSetMergerTest {
 
 
         Way theirWay = new Way();
-        theirWay.setOsmId(3,2);
+        theirWay.setOsmId(3,1);
         theirWay.setVisible(false);
+        /* Invisible objects fetched from the server should be marked as "deleted".
+         * Otherwise it's an error.
+         */
+        theirWay.setDeleted(true);
         their.addPrimitive(theirWay);
 
         DataSetMerger visitor = new DataSetMerger(my,their);
