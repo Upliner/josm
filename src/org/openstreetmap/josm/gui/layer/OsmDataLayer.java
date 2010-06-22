@@ -284,8 +284,37 @@ public class OsmDataLayer extends Layer implements Listener, SelectionChangedLis
         return tool;
     }
 
+    /**
+     * Checks if the dataset has visibility conflicts with this layer
+     * @param from the dataset to be checked
+     * @return <code>true</code> if datasets have visiblity conflicts
+     */
+    private boolean hasVisibilityConflicts(DataSet from) {
+        for (OsmPrimitive p : from.allPrimitives()) {
+            if (p.isNew() || p.isIncomplete()) {
+                continue;
+            }
+            OsmPrimitive target = data.getPrimitiveById(p.getPrimitiveId());
+            if (target == null || target.isIncomplete()) {
+                continue;
+            }
+            if (p.getVersion() == target.getVersion() && p.isVisible() != target.isVisible())
+                return true;
+        }
+        return false;
+    }
+
     @Override public void mergeFrom(final Layer from) {
-        mergeFrom(((OsmDataLayer)from).data);
+        DataSet ds = ((OsmDataLayer)from).data;
+        if (hasVisibilityConflicts(ds)) {
+            // Happens only when working with bad data
+            JOptionPane.showMessageDialog(Main.parent, tr(
+                    "Cannot merge layers with visibility conflicts.\n" +
+                    "Try to update data (Ctrl+U by default) for both layers before merging."
+            ));
+            return;
+        }
+        mergeFrom(ds);
     }
 
     /**

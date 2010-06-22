@@ -13,7 +13,6 @@ import java.util.Observable;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.CoordinateConflictResolveCommand;
 import org.openstreetmap.josm.command.DeletedStateConflictResolveCommand;
-import org.openstreetmap.josm.command.VisibleStateConflictResolveCommand;
 import org.openstreetmap.josm.data.conflict.Conflict;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
@@ -51,12 +50,9 @@ public class PropertiesMergeModel extends Observable {
 
     private boolean myDeletedState;
     private boolean theirDeletedState;
-    private boolean myVisibleState;
-    private boolean theirVisibleState;
     private List<OsmPrimitive> myReferrers;
     private List<OsmPrimitive> theirReferrers;
     private MergeDecisionType deletedMergeDecision;
-    private MergeDecisionType visibleMergeDecision;
     private final PropertyChangeSupport support;
     private boolean resolvedCompletely;
 
@@ -104,17 +100,6 @@ public class PropertiesMergeModel extends Observable {
     }
 
     /**
-     * replies true if there is a  conflict in the visible state and if this conflict is
-     * resolved
-     *
-     * @return true if there is a conflict in the visible state and if this conflict is
-     * resolved; false, otherwise
-     */
-    public boolean isDecidedVisibleState() {
-        return ! visibleMergeDecision.equals(UNDECIDED);
-    }
-
-    /**
      * replies true if the current decision for the coordinate conflict is <code>decision</code>
      *
      * @return true if the current decision for the coordinate conflict is <code>decision</code>;
@@ -135,15 +120,6 @@ public class PropertiesMergeModel extends Observable {
     }
 
     /**
-     * replies true if the current decision for the visible state conflict is <code>decision</code>
-     *
-     * @return true if the current decision for the visible state conflict is <code>decision</code>;
-     *  false, otherwise
-     */
-    public boolean isVisibleStateDecision(MergeDecisionType decision) {
-        return visibleMergeDecision.equals(decision);
-    }
-    /**
      * populates the model with the differences between my and their version
      *
      * @param my my version of the primitive
@@ -163,15 +139,11 @@ public class PropertiesMergeModel extends Observable {
         myDeletedState =  conflict.isMyDeleted() || my.isDeleted();
         theirDeletedState = their.isDeleted();
 
-        myVisibleState = my.isVisible();
-        theirVisibleState = their.isVisible();
-
         myReferrers = my.getDataSet() == null?Collections.<OsmPrimitive>emptyList():my.getReferrers();
         theirReferrers = their.getDataSet() == null?Collections.<OsmPrimitive>emptyList():their.getReferrers();
 
         coordMergeDecision = UNDECIDED;
         deletedMergeDecision = UNDECIDED;
-        visibleMergeDecision = UNDECIDED;
         setChanged();
         notifyObservers();
         fireCompletelyResolved();
@@ -251,22 +223,6 @@ public class PropertiesMergeModel extends Observable {
     }
 
     /**
-     * replies my visible state,
-     * @return my visible state
-     */
-    public Boolean getMyVisibleState() {
-        return myVisibleState;
-    }
-
-    /**
-     * replies their visible state,
-     * @return their visible state
-     */
-    public  Boolean getTheirVisibleState() {
-        return theirVisibleState;
-    }
-
-    /**
      * returns my referrers,
      * @return my referrers
      */
@@ -280,28 +236,6 @@ public class PropertiesMergeModel extends Observable {
      */
     public List<OsmPrimitive> getTheirReferrers() {
         return theirReferrers;
-    }
-
-    /**
-     * replies the merged visible state; null, if the merge decision is
-     * {@see MergeDecisionType#UNDECIDED}.
-     *
-     * @return the merged visible state
-     */
-    public Boolean getMergedVisibleState() {
-        if (my.getVersion() != their.getVersion()) {
-            if (my.getVersion() > their.getVersion())
-                return my.isVisible();
-            else
-                return their.isVisible();
-        }
-        switch(visibleMergeDecision) {
-        case KEEP_MINE: return myVisibleState;
-        case KEEP_THEIR: return theirVisibleState;
-        case UNDECIDED: return null;
-        }
-        // should not happen
-        return null;
     }
 
     private boolean getMergedDeletedState(MergeDecisionType decision) {
@@ -338,20 +272,6 @@ public class PropertiesMergeModel extends Observable {
     }
 
     /**
-     * decides the conflict between two visible states
-     * @param decision the decision (must not be null)
-     *
-     * @throws IllegalArgumentException thrown, if decision is null
-     */
-    public void decideVisibleStateConflict(MergeDecisionType decision) throws IllegalArgumentException {
-        CheckParameterUtil.ensureParameterNotNull(decision, "decision");
-        this.visibleMergeDecision = decision;
-        setChanged();
-        notifyObservers();
-        fireCompletelyResolved();
-    }
-
-    /**
      * replies true if my and their primitive have a conflict between
      * their coordinate values
      *
@@ -377,17 +297,6 @@ public class PropertiesMergeModel extends Observable {
     }
 
     /**
-     * replies true if my and their primitive have a conflict between
-     * their visible states
-     *
-     * @return true if my and their primitive have a conflict between
-     * their visible states
-     */
-    public boolean hasVisibleStateConflict() {
-        return myVisibleState != theirVisibleState && my.getVersion() == their.getVersion();
-    }
-
-    /**
      * replies true if all conflict in this model are resolved
      *
      * @return true if all conflict in this model are resolved; false otherwise
@@ -399,9 +308,6 @@ public class PropertiesMergeModel extends Observable {
         }
         if (hasDeletedStateConflict()) {
             ret = ret && ! deletedMergeDecision.equals(UNDECIDED);
-        }
-        if (hasVisibleStateConflict()) {
-            ret = ret && ! visibleMergeDecision.equals(UNDECIDED);
         }
         return ret;
     }
@@ -415,9 +321,6 @@ public class PropertiesMergeModel extends Observable {
      */
     public List<Command> buildResolveCommand(Conflict<? extends OsmPrimitive> conflict) {
         List<Command> cmds = new ArrayList<Command>();
-        if (hasVisibleStateConflict() && isDecidedVisibleState()) {
-            cmds.add(new VisibleStateConflictResolveCommand(conflict, visibleMergeDecision));
-        }
         if (hasCoordConflict() && isDecidedCoord()) {
             cmds.add(new CoordinateConflictResolveCommand(conflict, coordMergeDecision));
         }

@@ -52,10 +52,6 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
     private JLabel lblMergedDeletedState;
     private JLabel lblTheirDeletedState;
 
-    private JLabel lblMyVisibleState;
-    private JLabel lblMergedVisibleState;
-    private JLabel lblTheirVisibleState;
-
     private JLabel lblMyReferrers;
     private JLabel lblTheirReferrers;
 
@@ -249,82 +245,6 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         add(btnUndecideDeletedState, gc);
     }
 
-    protected void buildVisibleStateRows() {
-        GridBagConstraints gc = new GridBagConstraints();
-
-        gc.gridx = 0;
-        gc.gridy = 5;
-        gc.gridwidth = 1;
-        gc.gridheight = 1;
-        gc.fill = GridBagConstraints.BOTH;
-        gc.anchor = GridBagConstraints.LINE_START;
-        gc.weightx = 0.0;
-        gc.weighty = 0.0;
-        gc.insets = new Insets(0,5,0,5);
-        add(new JLabel(tr("Visible State:")), gc);
-
-        gc.gridx = 1;
-        gc.gridy = 5;
-        gc.fill = GridBagConstraints.BOTH;
-        gc.anchor = GridBagConstraints.CENTER;
-        gc.weightx = 0.33;
-        gc.weighty = 0.0;
-        add(lblMyVisibleState = buildValueLabel("label.myvisiblestate"), gc);
-
-        gc.gridx = 2;
-        gc.gridy = 5;
-        gc.fill = GridBagConstraints.NONE;
-        gc.anchor = GridBagConstraints.CENTER;
-        gc.weightx = 0.0;
-        gc.weighty = 0.0;
-        KeepMyVisibleStateAction actKeepMyVisibleState = new KeepMyVisibleStateAction();
-        model.addObserver(actKeepMyVisibleState);
-        JButton btnKeepMyVisibleState = new JButton(actKeepMyVisibleState);
-        btnKeepMyVisibleState.setName("button.keepmyvisiblestate");
-        add(btnKeepMyVisibleState, gc);
-
-        gc.gridx = 3;
-        gc.gridy = 5;
-        gc.fill = GridBagConstraints.BOTH;
-        gc.anchor = GridBagConstraints.CENTER;
-        gc.weightx = 0.33;
-        gc.weighty = 0.0;
-        add(lblMergedVisibleState = buildValueLabel("label.mergedvisiblestate"), gc);
-
-        gc.gridx = 4;
-        gc.gridy = 5;
-        gc.fill = GridBagConstraints.NONE;
-        gc.anchor = GridBagConstraints.CENTER;
-        gc.weightx = 0.0;
-        gc.weighty = 0.0;
-        KeepTheirVisibleStateAction actKeepTheirVisibleState = new KeepTheirVisibleStateAction();
-        model.addObserver(actKeepTheirVisibleState);
-        JButton btnKeepTheirVisibleState = new JButton(actKeepTheirVisibleState);
-        btnKeepTheirVisibleState.setName("button.keeptheirvisiblestate");
-        add(btnKeepTheirVisibleState, gc);
-
-        gc.gridx = 5;
-        gc.gridy = 5;
-        gc.fill = GridBagConstraints.BOTH;
-        gc.anchor = GridBagConstraints.CENTER;
-        gc.weightx = 0.33;
-        gc.weighty = 0.0;
-        add(lblTheirVisibleState = buildValueLabel("label.theirvisiblestate"), gc);
-
-        // ---------------------------------------------------
-        gc.gridx = 3;
-        gc.gridy = 6;
-        gc.fill = GridBagConstraints.NONE;
-        gc.anchor = GridBagConstraints.CENTER;
-        gc.weightx = 0.0;
-        gc.weighty = 0.0;
-        UndecideVisibleStateConflictAction actUndecideVisibleState = new UndecideVisibleStateConflictAction();
-        model.addObserver(actUndecideVisibleState);
-        JButton btnUndecideVisibleState = new JButton(actUndecideVisibleState);
-        btnUndecideVisibleState.setName("button.undecidevisiblestate");
-        add(btnUndecideVisibleState, gc);
-    }
-
     protected void buildReferrersRow() {
         GridBagConstraints gc = new GridBagConstraints();
 
@@ -361,7 +281,6 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         buildHeaderRow();
         buildCoordinateConflictRows();
         buildDeletedStateConflictRows();
-        buildVisibleStateRows();
         buildReferrersRow();
     }
 
@@ -390,15 +309,6 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
             return tr("deleted");
         else
             return tr("not deleted");
-    }
-
-    public String visibleStateToString(Boolean visible) {
-        if (visible == null)
-            return tr("(none)");
-        if (visible)
-            return tr("visible (on the server)");
-        else
-            return tr("not visible (on the server)");
     }
 
     public String referrersToString(List<OsmPrimitive> referrers) {
@@ -467,34 +377,6 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         }
     }
 
-    protected void updateVisibleState() {
-        lblMyVisibleState.setText(visibleStateToString(model.getMyVisibleState()));
-        lblMergedVisibleState.setText(visibleStateToString(model.getMergedVisibleState()));
-        lblTheirVisibleState.setText(visibleStateToString(model.getTheirVisibleState()));
-
-        if (! model.hasVisibleStateConflict()) {
-            lblMyVisibleState.setBackground(BGCOLOR_NO_CONFLICT);
-            lblMergedVisibleState.setBackground(BGCOLOR_NO_CONFLICT);
-            lblTheirVisibleState.setBackground(BGCOLOR_NO_CONFLICT);
-        } else {
-            if (!model.isDecidedVisibleState()) {
-                lblMyVisibleState.setBackground(BGCOLOR_UNDECIDED);
-                lblMergedVisibleState.setBackground(BGCOLOR_NO_CONFLICT);
-                lblTheirVisibleState.setBackground(BGCOLOR_UNDECIDED);
-            } else {
-                lblMyVisibleState.setBackground(
-                        model.isVisibleStateDecision(MergeDecisionType.KEEP_MINE)
-                        ? BGCOLOR_DECIDED : BGCOLOR_NO_CONFLICT
-                );
-                lblMergedVisibleState.setBackground(BGCOLOR_DECIDED);
-                lblTheirVisibleState.setBackground(
-                        model.isVisibleStateDecision(MergeDecisionType.KEEP_THEIR)
-                        ? BGCOLOR_DECIDED : BGCOLOR_NO_CONFLICT
-                );
-            }
-        }
-    }
-
     protected void updateReferrers() {
         lblMyReferrers.setText(referrersToString(model.getMyReferrers()));
         lblMyReferrers.setBackground(BGCOLOR_NO_CONFLICT);
@@ -505,7 +387,6 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
     public void update(Observable o, Object arg) {
         updateCoordinates();
         updateDeletedState();
-        updateVisibleState();
         updateReferrers();
     }
 
@@ -600,52 +481,6 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
 
         public void update(Observable o, Object arg) {
             setEnabled(model.hasDeletedStateConflict() && model.isDecidedDeletedState());
-        }
-    }
-
-    class KeepMyVisibleStateAction extends AbstractAction implements Observer {
-        public KeepMyVisibleStateAction() {
-            putValue(Action.SMALL_ICON, ImageProvider.get("dialogs/conflict", "tagkeepmine"));
-            putValue(Action.SHORT_DESCRIPTION, tr("Keep my visible state"));
-        }
-
-        public void actionPerformed(ActionEvent e) {
-            model.decideVisibleStateConflict(MergeDecisionType.KEEP_MINE);
-        }
-
-        public void update(Observable o, Object arg) {
-            setEnabled(model.hasVisibleStateConflict() && ! model.isDecidedVisibleState());
-        }
-    }
-
-    class KeepTheirVisibleStateAction extends AbstractAction implements Observer {
-        public KeepTheirVisibleStateAction() {
-            putValue(Action.SMALL_ICON, ImageProvider.get("dialogs/conflict", "tagkeeptheir"));
-            putValue(Action.SHORT_DESCRIPTION, tr("Keep their visible state"));
-        }
-
-        public void actionPerformed(ActionEvent e) {
-            model.decideVisibleStateConflict(MergeDecisionType.KEEP_THEIR);
-        }
-
-        public void update(Observable o, Object arg) {
-            setEnabled(model.hasVisibleStateConflict() && ! model.isDecidedVisibleState());
-        }
-
-    }
-
-    class UndecideVisibleStateConflictAction extends AbstractAction implements Observer {
-        public UndecideVisibleStateConflictAction() {
-            putValue(Action.SMALL_ICON, ImageProvider.get("dialogs/conflict", "tagundecide"));
-            putValue(Action.SHORT_DESCRIPTION, tr("Undecide conflict between visible state"));
-        }
-
-        public void actionPerformed(ActionEvent e) {
-            model.decideVisibleStateConflict(MergeDecisionType.UNDECIDED);
-        }
-
-        public void update(Observable o, Object arg) {
-            setEnabled(model.hasVisibleStateConflict() && model.isDecidedVisibleState());
         }
     }
 
