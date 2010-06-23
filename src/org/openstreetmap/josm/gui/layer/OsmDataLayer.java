@@ -11,6 +11,7 @@ import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Composite;
+import java.awt.EventQueue;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
 import java.awt.Point;
@@ -38,6 +39,7 @@ import javax.swing.JTextArea;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.RenameLayerAction;
+import org.openstreetmap.josm.actions.UpdateSelectionAction;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.SelectionChangedListener;
 import org.openstreetmap.josm.data.conflict.Conflict;
@@ -286,11 +288,12 @@ public class OsmDataLayer extends Layer implements Listener, SelectionChangedLis
 
     /**
      * Checks if the dataset has visibility conflicts with this layer
-     * @param from the dataset to be checked
-     * @return <code>true</code> if datasets have visiblity conflicts
+     * @param source the dataset to be checked
+     * @return a list of primitives from source dataset that have visibility conflicts
      */
-    private boolean hasVisibilityConflicts(DataSet from) {
-        for (OsmPrimitive p : from.allPrimitives()) {
+    private Map<OsmPrimitive,OsmPrimitive> getVisibilityConflicts(DataSet source) {
+        Map<OsmPrimitive,OsmPrimitive> conflicts = new HashMap<OsmPrimitive,OsmPrimitive>();
+        for (OsmPrimitive p : source.allPrimitives()) {
             if (p.isNew() || p.isIncomplete()) {
                 continue;
             }
@@ -298,23 +301,80 @@ public class OsmDataLayer extends Layer implements Listener, SelectionChangedLis
             if (target == null || target.isIncomplete()) {
                 continue;
             }
-            if (p.getVersion() == target.getVersion() && p.isVisible() != target.isVisible())
-                return true;
+            if (p.getVersion() == target.getVersion() && p.isVisible() != target.isVisible()) {
+                conflicts.put(p, target);
+            }
         }
-        return false;
+        return conflicts;
+    }
+
+    private void handleVisibilityConflict(DataSet source, final Map<OsmPrimitive,OsmPrimitive> conflicts) {
+        ButtonSpec[] options = new ButtonSpec[] {
+                new ButtonSpec(
+                        tr("Check on the server"),
+                        ImageProvider.get("ok"),
+                        tr("Click to check whether objects in your local dataset are deleted on the server"),
+                        null  /* no specific help topic */
+                ),
+                new ButtonSpec(
+                        tr("Ignore"),
+                        ImageProvider.get("cancel"),
+                        tr("Click to ignore conflicts and merge layers as is"),
+                        null /* no specific help topic */
+                ),
+        };
+
+        String message = "<html>"
+            + trn("There is {0} object in your local dataset which "
+                    + "might be deleted on the server. If you later try to delete or "
+                    + "update this the server is likely to report a conflict.",
+                    "There are {0} objects in your local dataset which "
+                    + "might be deleted on the server. If you later try to delete or "
+                    + "update them the server is likely to report a conflict.", conflicts.size(), conflicts.size())
+                    + "<br>"
+                    + trn("Click <strong>{0}</strong> to check the state of this object on the server.",
+                            "Click <strong>{0}</strong> to check the state of these objects on the server.",
+                            conflicts.size(),
+                            options[0].text) + "<br>"
+                            + tr("Click <strong>{0}</strong> to ignore." + "</html>", options[1].text);
+
+        int ret = HelpAwareOptionPane.showOptionDialog(
+                Main.parent,
+                message,
+                tr("Server visibility conflict"),
+                JOptionPane.WARNING_MESSAGE,
+                null,
+                options,
+                options[0],
+                ht("/Action/UpdateData#SyncPotentiallyDeletedObjects")
+        );
+        switch (ret){
+        case 0:
+            for (OsmPrimitive p : conflicts.keySet()) {
+                p.setVisible(true);
+            }
+            mergeFrom(source);
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    new UpdateSelectionAction().updatePrimitives(conflicts.values());
+                }
+            });
+            break;
+        case 1:
+            mergeFrom(source);
+            break;
+        }
     }
 
     @Override public void mergeFrom(final Layer from) {
         DataSet ds = ((OsmDataLayer)from).data;
-        if (hasVisibilityConflicts(ds)) {
-            // Happens only when working with bad data
-            JOptionPane.showMessageDialog(Main.parent, tr(
-                    "Cannot merge layers with visibility conflicts.\n" +
-                    "Try to update data (Ctrl+U by default) for both layers before merging."
-            ));
-            return;
+        Map<OsmPrimitive,OsmPrimitive> vconflicts = getVisibilityConflicts(ds);
+        if (vconflicts.isEmpty()) {
+            mergeFrom(ds);
+        } else {
+            // Should happen only when working with bad data
+            handleVisibilityConflict(ds, vconflicts);
         }
-        mergeFrom(ds);
     }
 
     /**
