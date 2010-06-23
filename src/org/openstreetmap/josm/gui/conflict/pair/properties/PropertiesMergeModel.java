@@ -42,7 +42,6 @@ public class PropertiesMergeModel extends Observable {
     static public final String DELETE_PRIMITIVE_PROP = PropertiesMergeModel.class.getName() + ".deletePrimitive";
 
     private OsmPrimitive my;
-    private OsmPrimitive their;
 
     private LatLon myCoords;
     private LatLon theirCoords;
@@ -127,7 +126,7 @@ public class PropertiesMergeModel extends Observable {
      */
     public void populate(Conflict<? extends OsmPrimitive> conflict) {
         this.my = conflict.getMy();
-        this.their = conflict.getTheir();
+        OsmPrimitive their = conflict.getTheir();
         if (my instanceof Node) {
             myCoords = ((Node)my).getCoor();
             theirCoords = ((Node)their).getCoor();

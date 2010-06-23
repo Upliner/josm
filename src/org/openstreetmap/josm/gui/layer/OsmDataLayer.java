@@ -285,8 +285,7 @@ public class OsmDataLayer extends Layer implements Listener, SelectionChangedLis
     }
 
     @Override public void mergeFrom(final Layer from) {
-        DataSet ds = ((OsmDataLayer)from).data;
-        mergeFrom(ds);
+        mergeFrom(((OsmDataLayer)from).data);
     }
 
     /**

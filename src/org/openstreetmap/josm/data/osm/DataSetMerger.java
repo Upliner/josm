@@ -242,11 +242,7 @@ public class DataSetMerger {
             // target.version > source.version => keep target version
             return true;
 
-        if (target.isIncomplete() && source.isIncomplete()) {
-            // target and source are incomplete. Doesn't matter which one to
-            // take. We take target.
-            //
-        } else if (target.isIncomplete() && !source.isIncomplete()) {
+        if (target.isIncomplete() && !source.isIncomplete()) {
             // target is incomplete, source completes it
             // => merge source into target
             //
@@ -255,6 +251,10 @@ public class DataSetMerger {
         } else if (!target.isIncomplete() && source.isIncomplete()) {
             // target is complete and source is incomplete
             // => keep target, it has more information already
+            //
+        } else if (target.isIncomplete() && source.isIncomplete()) {
+            // target and source are incomplete. Doesn't matter which one to
+            // take. We take target.
             //
         } else if (target.isDeleted() && ! source.isDeleted() && target.getVersion() == source.getVersion()) {
             // same version, but target is deleted. Assume target takes precedence

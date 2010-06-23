@@ -40,9 +40,9 @@ public class VersionConflictResolveCommand extends ConflictResolveCommand {
         case RELATION: msg = marktr("Resolve version conflict for relation {0}"); break;
         }
         return new JLabel(
-                tr(msg,conflict.getMy().getId()),
-                ImageProvider.get("data", "object"),
-                JLabel.HORIZONTAL
+                        tr(msg,conflict.getMy().getId()),
+                        ImageProvider.get("data", "object"),
+                        JLabel.HORIZONTAL
         );
     }
 

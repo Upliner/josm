@@ -14,7 +14,7 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.tools.ImageProvider;
 
 /**
- * Represents a the resolution of a conflict between deleted and not deleted {@see OsmPrimitive}s
+ * Represents a the resolution of a conflict between the coordinates of two {@see Node}s
  *
  */
 public class DeletedStateConflictResolveCommand extends ConflictResolveCommand {
@@ -39,9 +39,9 @@ public class DeletedStateConflictResolveCommand extends ConflictResolveCommand {
 
     @Override public JLabel getDescription() {
         return new JLabel(
-                tr("Resolve conflicts in deleted state in {0}",conflict.getMy().getId()),
-                ImageProvider.get("data", "object"),
-                JLabel.HORIZONTAL
+                        tr("Resolve conflicts in deleted state in {0}",conflict.getMy().getId()),
+                        ImageProvider.get("data", "object"),
+                        JLabel.HORIZONTAL
         );
     }
 
