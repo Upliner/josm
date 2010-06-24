@@ -625,7 +625,7 @@ public class DataSetMergerTest {
 
 
         Way theirWay = new Way();
-        theirWay.setOsmId(3,1);
+        theirWay.setOsmId(3,2);
         theirWay.setVisible(false);
         /* Invisible objects fetched from the server should be marked as "deleted".
          * Otherwise it's an error.
