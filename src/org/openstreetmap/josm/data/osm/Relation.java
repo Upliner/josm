@@ -1,6 +1,7 @@
 package org.openstreetmap.josm.data.osm;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +18,7 @@ import org.openstreetmap.josm.tools.CopyList;
  */
 public final class Relation extends OsmPrimitive {
 
-    private final List<RelationMember> members = new ArrayList<RelationMember>();
+    private RelationMember[] members = new RelationMember[0];
 
     private BBox bbox;
 
@@ -27,7 +28,7 @@ public final class Relation extends OsmPrimitive {
      * @since 1925
      */
     public List<RelationMember> getMembers() {
-        return new CopyList<RelationMember>(members.toArray(new RelationMember[members.size()]));
+        return new CopyList<RelationMember>(members);
     }
 
     /**
@@ -36,42 +37,65 @@ public final class Relation extends OsmPrimitive {
      * @since 1925
      */
     public void setMembers(List<RelationMember> members) {
-        for (RelationMember rm:this.members) {
-            rm.getMember().removeReferrer(this);
-        }
+        boolean locked = writeLock();
+        try {
+            for (RelationMember rm:this.members) {
+                rm.getMember().removeReferrer(this);
+            }
 
-        this.members.clear();
-        if (members != null) {
-            this.members.addAll(members);
-        }
-        for (RelationMember rm:this.members) {
-            rm.getMember().addReferrer(this);
-        }
+            if (members != null) {
+                this.members = members.toArray(new RelationMember[members.size()]);
+            } else {
+                this.members = new RelationMember[0];
+            }
+            for (RelationMember rm:this.members) {
+                rm.getMember().addReferrer(this);
+            }
 
-        fireMembersChanged();
+            fireMembersChanged();
+        } finally {
+            writeUnlock(locked);
+        }
     }
 
     /**
      * @return number of members
      */
     public int getMembersCount() {
-        return members.size();
+        return members.length;
     }
 
     public RelationMember getMember(int index) {
-        return members.get(index);
+        return members[index];
     }
 
     public void addMember(RelationMember member) {
-        members.add(member);
-        member.getMember().addReferrer(this);
-        fireMembersChanged();
+        boolean locked = writeLock();
+        try {
+            RelationMember[] newMembers = new RelationMember[members.length + 1];
+            System.arraycopy(members, 0, newMembers, 0, members.length);
+            newMembers[members.length] = member;
+            members = newMembers;
+            member.getMember().addReferrer(this);
+            fireMembersChanged();
+        } finally {
+            writeUnlock(locked);
+        }
     }
 
     public void addMember(int index, RelationMember member) {
-        members.add(index, member);
-        member.getMember().addReferrer(this);
-        fireMembersChanged();
+        boolean locked = writeLock();
+        try {
+            RelationMember[] newMembers = new RelationMember[members.length + 1];
+            System.arraycopy(members, 0, newMembers, 0, index);
+            System.arraycopy(members, index, newMembers, index + 1, members.length - index);
+            newMembers[index] = member;
+            members = newMembers;
+            member.getMember().addReferrer(this);
+            fireMembersChanged();
+        } finally {
+            writeUnlock(locked);
+        }
     }
 
     /**
@@ -81,13 +105,19 @@ public final class Relation extends OsmPrimitive {
      * @return Member that was at the position
      */
     public RelationMember setMember(int index, RelationMember member) {
-        RelationMember result = members.set(index, member);
-        if (result.getMember() != member.getMember()) {
-            member.getMember().addReferrer(this);
-            result.getMember().removeReferrer(this);
-            fireMembersChanged();
+        boolean locked = writeLock();
+        try {
+            RelationMember originalMember = members[index];
+            members[index] = member;
+            if (originalMember.getMember() != member.getMember()) {
+                member.getMember().addReferrer(this);
+                originalMember.getMember().removeReferrer(this);
+                fireMembersChanged();
+            }
+            return originalMember;
+        } finally {
+            writeUnlock(locked);
         }
-        return result;
     }
 
     /**
@@ -96,15 +126,15 @@ public final class Relation extends OsmPrimitive {
      * @return Member that was at the position
      */
     public RelationMember removeMember(int index) {
-        RelationMember result = members.remove(index);
-        for (RelationMember rm:members) {
-            // Do not remove referrer if this primitive is used in relation twice
-            if (rm.getMember() == result.getMember())
-                return result;
+        boolean locked = writeLock();
+        try {
+            List<RelationMember> members = getMembers();
+            RelationMember result = members.remove(index);
+            setMembers(members);
+            return result;
+        } finally {
+            writeUnlock(locked);
         }
-        result.getMember().removeReferrer(this);
-        fireMembersChanged();
-        return result;
     }
 
     @Override public void visit(Visitor visitor) {
@@ -158,24 +188,34 @@ public final class Relation extends OsmPrimitive {
     }
 
     @Override public void cloneFrom(OsmPrimitive osm) {
-        super.cloneFrom(osm);
-        // It's not necessary to clone members as RelationMember class is immutable
-        setMembers(((Relation)osm).getMembers());
+        boolean locked = writeLock();
+        try {
+            super.cloneFrom(osm);
+            // It's not necessary to clone members as RelationMember class is immutable
+            setMembers(((Relation)osm).getMembers());
+        } finally {
+            writeUnlock(locked);
+        }
     }
 
     @Override public void load(PrimitiveData data) {
-        super.load(data);
+        boolean locked = writeLock();
+        try {
+            super.load(data);
 
-        RelationData relationData = (RelationData) data;
+            RelationData relationData = (RelationData) data;
 
-        List<RelationMember> newMembers = new ArrayList<RelationMember>();
-        for (RelationMemberData member : relationData.getMembers()) {
-            OsmPrimitive primitive = getDataSet().getPrimitiveById(member);
-            if (primitive == null)
-                throw new AssertionError("Data consistency problem - relation with missing member detected");
-            newMembers.add(new RelationMember(member.getRole(), primitive));
+            List<RelationMember> newMembers = new ArrayList<RelationMember>();
+            for (RelationMemberData member : relationData.getMembers()) {
+                OsmPrimitive primitive = getDataSet().getPrimitiveById(member);
+                if (primitive == null)
+                    throw new AssertionError("Data consistency problem - relation with missing member detected");
+                newMembers.add(new RelationMember(member.getRole(), primitive));
+            }
+            setMembers(newMembers);
+        } finally {
+            writeUnlock(locked);
         }
-        setMembers(newMembers);
     }
 
     @Override public RelationData save() {
@@ -215,7 +255,7 @@ public final class Relation extends OsmPrimitive {
         if (! super.hasEqualSemanticAttributes(other))
             return false;
         Relation r = (Relation)other;
-        return members.equals(r.members);
+        return Arrays.equals(members, r.members);
     }
 
     public int compareTo(OsmPrimitive o) {
@@ -224,11 +264,15 @@ public final class Relation extends OsmPrimitive {
 
     public RelationMember firstMember() {
         if (isIncomplete()) return null;
-        return (members.size() == 0) ? null : members.get(0);
+
+        RelationMember[] members = this.members;
+        return (members.length == 0) ? null : members[0];
     }
     public RelationMember lastMember() {
         if (isIncomplete()) return null;
-        return (members.size() == 0) ? null : members.get(members.size() -1);
+
+        RelationMember[] members = this.members;
+        return (members.length == 0) ? null : members[members.length - 1];
     }
 
     /**
@@ -240,27 +284,37 @@ public final class Relation extends OsmPrimitive {
         if (primitive == null)
             return;
 
-        ArrayList<RelationMember> todelete = new ArrayList<RelationMember>();
-        for (RelationMember member: members) {
-            if (member.getMember() == primitive) {
-                todelete.add(member);
+        boolean locked = writeLock();
+        try {
+            List<RelationMember> todelete = new ArrayList<RelationMember>();
+            for (RelationMember member: members) {
+                if (member.getMember() == primitive) {
+                    todelete.add(member);
+                }
             }
+            List<RelationMember> members = getMembers();
+            members.removeAll(todelete);
+            setMembers(members);
+        } finally {
+            writeUnlock(locked);
         }
-        primitive.removeReferrer(this);
-        members.removeAll(todelete);
-        fireMembersChanged();
     }
 
     @Override
     public void setDeleted(boolean deleted) {
-        for (RelationMember rm:members) {
-            if (deleted) {
-                rm.getMember().removeReferrer(this);
-            } else {
-                rm.getMember().addReferrer(this);
+        boolean locked = writeLock();
+        try {
+            for (RelationMember rm:members) {
+                if (deleted) {
+                    rm.getMember().removeReferrer(this);
+                } else {
+                    rm.getMember().addReferrer(this);
+                }
             }
+            super.setDeleted(deleted);
+        } finally {
+            writeUnlock(locked);
         }
-        super.setDeleted(deleted);
     }
 
     /**
@@ -272,17 +326,20 @@ public final class Relation extends OsmPrimitive {
         if (primitives == null || primitives.isEmpty())
             return;
 
-        ArrayList<RelationMember> todelete = new ArrayList<RelationMember>();
-        for (RelationMember member: members) {
-            if (primitives.contains(member.getMember())) {
-                todelete.add(member);
+        boolean locked = writeLock();
+        try {
+            ArrayList<RelationMember> todelete = new ArrayList<RelationMember>();
+            for (RelationMember member: members) {
+                if (primitives.contains(member.getMember())) {
+                    todelete.add(member);
+                }
             }
+            List<RelationMember> members = getMembers();
+            members.removeAll(todelete);
+            setMembers(members);
+        } finally {
+            writeUnlock(locked);
         }
-        members.removeAll(todelete);
-        for (OsmPrimitive primitive:primitives) {
-            primitive.removeReferrer(this);
-        }
-        fireMembersChanged();
     }
 
     @Override
@@ -299,6 +356,7 @@ public final class Relation extends OsmPrimitive {
      */
     public Set<OsmPrimitive> getMemberPrimitives() {
         HashSet<OsmPrimitive> ret = new HashSet<OsmPrimitive>();
+        RelationMember[] members = this.members;
         for (RelationMember m: members) {
             if (m.getMember() != null) {
                 ret.add(m.getMember());
@@ -313,7 +371,9 @@ public final class Relation extends OsmPrimitive {
 
     @Override
     public BBox getBBox() {
-        if (members.isEmpty())
+        RelationMember[] members = this.members;
+
+        if (members.length == 0)
             return new BBox(0, 0, 0, 0);
         if (getDataSet() == null)
             return calculateBBox(new HashSet<PrimitiveId>());
@@ -332,7 +392,9 @@ public final class Relation extends OsmPrimitive {
         if (visitedRelations.contains(this))
             return null;
         visitedRelations.add(this);
-        if (members.isEmpty())
+
+        RelationMember[] members = this.members;
+        if (members.length == 0)
             return null;
         else {
             BBox result = null;
@@ -365,6 +427,7 @@ public final class Relation extends OsmPrimitive {
     private void checkMembers() {
         DataSet dataSet = getDataSet();
         if (dataSet != null) {
+            RelationMember[] members = this.members;
             for (RelationMember rm: members) {
                 if (rm.getMember().getDataSet() != dataSet)
                     throw new DataIntegrityProblemException(String.format("Relation member must be part of the same dataset as relation(%s, %s)", getPrimitiveId(), rm.getMember().getPrimitiveId()));
@@ -391,6 +454,7 @@ public final class Relation extends OsmPrimitive {
      * @return true if at least one child primitive is incomplete
      */
     public boolean hasIncompleteMembers() {
+        RelationMember[] members = this.members;
         for (RelationMember rm: members) {
             if (rm.getMember().isIncomplete()) return true;
         }
@@ -405,6 +469,7 @@ public final class Relation extends OsmPrimitive {
      */
     public Collection<OsmPrimitive> getIncompleteMembers() {
         Set<OsmPrimitive> ret = new HashSet<OsmPrimitive>();
+        RelationMember[] members = this.members;
         for (RelationMember rm: members) {
             if (!rm.getMember().isIncomplete()) {
                 continue;

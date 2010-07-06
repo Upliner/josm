@@ -3,10 +3,7 @@ package org.openstreetmap.josm.data.osm;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileInputStream;
-
-import javax.imageio.ImageIO;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -20,7 +17,7 @@ import org.openstreetmap.josm.gui.mappaint.MapPaintStyles;
 import org.openstreetmap.josm.gui.progress.NullProgressMonitor;
 import org.openstreetmap.josm.io.OsmReader;
 
-public class MapPaintVisitorPeformanceTest {
+public class MapPaintVisitorPerformanceTest {
 
     private static final int IMG_WIDTH = 1400;
     private static final int IMG_HEIGHT = 1050;
@@ -49,8 +46,8 @@ public class MapPaintVisitorPeformanceTest {
         dsCity = OsmReader.parseDataSet(new FileInputStream("data_nodist/neubrandenburg.osm"), NullProgressMonitor.INSTANCE);
 
         // Warm up
-        new MapPaintVisitorPeformanceTest().testRestrictionSmall();
-        new MapPaintVisitorPeformanceTest().testCity();
+        new MapPaintVisitorPerformanceTest().testRestrictionSmall();
+        new MapPaintVisitorPerformanceTest().testCity();
     }
 
     private static void test(int iterations, DataSet ds, Bounds bounds) throws Exception {
@@ -62,7 +59,6 @@ public class MapPaintVisitorPeformanceTest {
         for (int i=0; i<iterations; i++) {
             visitor.visitAll(ds, true, bounds);
         }
-        ImageIO.write(img, "png", new File("/home/jirka/a.png"));
     }
 
     @Test

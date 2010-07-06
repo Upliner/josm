@@ -183,77 +183,68 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
         return ret;
     }
 
-    /* mappaint data */
-    public ElemStyle mappaintStyle = null;
-    public int mappaintDrawnCode = 0;
-
-    /* This should not be called from outside. Fixing the UI to add relevant
-       get/set functions calling this implicitely is preferred, so we can have
-       transparent cache handling in the future. */
-    protected void clearCached()
-    {
-        mappaintDrawnCode = 0;
-        mappaintStyle = null;
-    }
-    /* end of mappaint data */
-
     /**
-     * Unique identifier in OSM. This is used to identify objects on the server.
-     * An id of 0 means an unknown id. The object has not been uploaded yet to
-     * know what id it will get.
-     *
+     * Some predicates, that describe conditions on primitives.
      */
-    private long id = 0;
+    public static final Predicate<OsmPrimitive> isUsablePredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return primitive.isUsable();
+        }
+    };
 
-    /** the parent dataset */
-    private DataSet dataSet;
+    public static final Predicate<OsmPrimitive> isSelectablePredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return primitive.isSelectable();
+        }
+    };
 
-    /**
-     * This method should never ever by called from somewhere else than Dataset.addPrimitive or removePrimitive methods
-     * @param dataSet
-     */
-    void setDataset(DataSet dataSet) {
-        if (this.dataSet != null && dataSet != null && this.dataSet != dataSet)
-            throw new DataIntegrityProblemException("Primitive cannot be included in more than one Dataset");
-        this.dataSet = dataSet;
-    }
+    public static final Predicate<OsmPrimitive> nonDeletedPredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return !primitive.isDeleted();
+        }
+    };
 
-    /**
-     *
-     * @return DataSet this primitive is part of.
-     */
-    public DataSet getDataSet() {
-        return dataSet;
-    }
+    public static final Predicate<OsmPrimitive> nonDeletedCompletePredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return !primitive.isDeleted() && !primitive.isIncomplete();
+        }
+    };
 
-    /**
-     * Throws exception if primitive is not part of the dataset
-     */
-    public void checkDataset() {
-        if (dataSet == null)
-            throw new DataIntegrityProblemException("Primitive  must be part of the dataset: " + toString());
-    }
+    public static final Predicate<OsmPrimitive> nonDeletedPhysicalPredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return !primitive.isDeleted() && !primitive.isIncomplete() && !(primitive instanceof Relation);
+        }
+    };
 
-    private volatile short flags = FLAG_VISIBLE;   // visible per default
+    public static final Predicate<OsmPrimitive> modifiedPredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return primitive.isModified();
+        }
+    };
 
-    /**
-     * User that last modified this primitive, as specified by the server.
-     * Never changed by JOSM.
-     */
-    private User user = null;
+    public static final Predicate<OsmPrimitive> nodePredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return primitive.getClass() == Node.class;
+        }
+    };
 
-    /**
-     * Contains the version number as returned by the API. Needed to
-     * ensure update consistency
-     */
-    private int version = 0;
+    public static final Predicate<OsmPrimitive> wayPredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return primitive.getClass() == Way.class;
+        }
+    };
 
-    /**
-     * The id of the changeset this primitive was last uploaded to.
-     * 0 if it wasn't uploaded to a changeset yet of if the changeset
-     * id isn't known.
-     */
-    private int changesetId;
+    public static final Predicate<OsmPrimitive> relationPredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return primitive.getClass() == Relation.class;
+        }
+    };
+
+    public static final Predicate<OsmPrimitive> allPredicate = new Predicate<OsmPrimitive>() {
+        public boolean evaluate(OsmPrimitive primitive) {
+            return true;
+        }
+    };
 
     /**
      * Creates a new primitive for the given id.
@@ -303,9 +294,321 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
         setIncomplete(id > 0 && version == 0);
     }
 
-    /* ------------------------------------------------------------------------------------ */
-    /* accessors                                                                            */
-    /* ------------------------------------------------------------------------------------ */
+
+    /*----------
+     * MAPPAINT
+     *--------*/
+    public ElemStyle mappaintStyle = null;
+    public int mappaintDrawnCode = 0;
+
+    /* This should not be called from outside. Fixing the UI to add relevant
+       get/set functions calling this implicitely is preferred, so we can have
+       transparent cache handling in the future. */
+    protected void clearCached()
+    {
+        mappaintDrawnCode = 0;
+        mappaintStyle = null;
+    }
+    /* end of mappaint data */
+
+    /*---------
+     * DATASET
+     *---------*/
+
+    /** the parent dataset */
+    private DataSet dataSet;
+
+    /**
+     * This method should never ever by called from somewhere else than Dataset.addPrimitive or removePrimitive methods
+     * @param dataSet
+     */
+    void setDataset(DataSet dataSet) {
+        if (this.dataSet != null && dataSet != null && this.dataSet != dataSet)
+            throw new DataIntegrityProblemException("Primitive cannot be included in more than one Dataset");
+        this.dataSet = dataSet;
+    }
+
+    /**
+     *
+     * @return DataSet this primitive is part of.
+     */
+    public DataSet getDataSet() {
+        return dataSet;
+    }
+
+    /**
+     * Throws exception if primitive is not part of the dataset
+     */
+    public void checkDataset() {
+        if (dataSet == null)
+            throw new DataIntegrityProblemException("Primitive  must be part of the dataset: " + toString());
+    }
+
+    protected boolean writeLock() {
+        if (dataSet != null) {
+            dataSet.beginUpdate();
+            return true;
+        } else
+            return false;
+    }
+
+    protected void writeUnlock(boolean locked) {
+        if (locked) {
+            // It shouldn't be possible for dataset to become null because method calling setDataset would need write lock which is owned by this thread
+            dataSet.endUpdate();
+        }
+    }
+
+
+    /*-------------------
+     * OTHER PROPERTIES
+     *-------------------*/
+
+    /**
+     * Unique identifier in OSM. This is used to identify objects on the server.
+     * An id of 0 means an unknown id. The object has not been uploaded yet to
+     * know what id it will get.
+     *
+     */
+    private long id = 0;
+
+    /**
+     * User that last modified this primitive, as specified by the server.
+     * Never changed by JOSM.
+     */
+    private User user = null;
+
+    /**
+     * Contains the version number as returned by the API. Needed to
+     * ensure update consistency
+     */
+    private int version = 0;
+
+    /**
+     * The id of the changeset this primitive was last uploaded to.
+     * 0 if it wasn't uploaded to a changeset yet of if the changeset
+     * id isn't known.
+     */
+    private int changesetId;
+
+    /**
+     * Replies the version number as returned by the API. The version is 0 if the id is 0 or
+     * if this primitive is incomplete.
+     *
+     * @see #setVersion(int)
+     */
+    public long getVersion() {
+        return version;
+    }
+
+    /**
+     * Replies the id of this primitive.
+     *
+     * @return the id of this primitive.
+     */
+    public long getId() {
+        long id = this.id;
+        return id >= 0?id:0;
+    }
+
+    /**
+     *
+     * @return Osm id if primitive already exists on the server. Unique negative value if primitive is new
+     */
+    public long getUniqueId() {
+        return id;
+    }
+
+    /**
+     *
+     * @return True if primitive is new (not yet uploaded the server, id <= 0)
+     */
+    public boolean isNew() {
+        return id <= 0;
+    }
+
+    /**
+     *
+     * @return True if primitive is new or undeleted
+     * @see #isNew()
+     * @see #isUndeleted()
+     */
+    public boolean isNewOrUndeleted() {
+        return (id <= 0) || ((flags & (FLAG_VISIBLE + FLAG_DELETED)) == 0);
+    }
+
+    /**
+     * Sets the id and the version of this primitive if it is known to the OSM API.
+     *
+     * Since we know the id and its version it can't be incomplete anymore. incomplete
+     * is set to false.
+     *
+     * @param id the id. > 0 required
+     * @param version the version > 0 required
+     * @throws IllegalArgumentException thrown if id <= 0
+     * @throws IllegalArgumentException thrown if version <= 0
+     * @throws DataIntegrityProblemException If id is changed and primitive was already added to the dataset
+     */
+    public void setOsmId(long id, int version) {
+        boolean locked = writeLock();
+        try {
+            if (id <= 0)
+                throw new IllegalArgumentException(tr("ID > 0 expected. Got {0}.", id));
+            if (version <= 0)
+                throw new IllegalArgumentException(tr("Version > 0 expected. Got {0}.", version));
+            if (dataSet != null && id != this.id) {
+                DataSet datasetCopy = dataSet;
+                // Reindex primitive
+                datasetCopy.removePrimitive(this);
+                this.id = id;
+                datasetCopy.addPrimitive(this);
+            }
+            this.id = id;
+            this.version = version;
+            this.setIncomplete(false);
+        } finally {
+            writeUnlock(locked);
+        }
+    }
+
+    /**
+     * Clears the id and version known to the OSM API. The id and the version is set to 0.
+     * incomplete is set to false. It's preferred to use copy constructor with clearId set to true instead
+     * of calling this method.
+     *
+     * <strong>Caution</strong>: Do not use this method on primitives which are already added to a {@see DataSet}.
+     *
+     * @throws DataIntegrityProblemException If primitive was already added to the dataset
+     */
+    public void clearOsmId() {
+        if (dataSet != null)
+            throw new DataIntegrityProblemException("Method cannot be called after primitive was added to the dataset");
+
+        // Not part of dataset - no lock necessary
+        this.id = generateUniqueId();
+        this.version = 0;
+        this.changesetId = 0; // reset changeset id on a new object
+        this.setIncomplete(false);
+    }
+
+    /**
+     * Replies the user who has last touched this object. May be null.
+     *
+     * @return the user who has last touched this object. May be null.
+     */
+    public User getUser() {
+        return user;
+    }
+
+    /**
+     * Sets the user who has last touched this object.
+     *
+     * @param user the user
+     */
+    public void setUser(User user) {
+        boolean locked = writeLock();
+        try {
+            this.user = user;
+        } finally {
+            writeUnlock(locked);
+        }
+    }
+
+    /**
+     * Replies the id of the changeset this primitive was last uploaded to.
+     * 0 if this primitive wasn't uploaded to a changeset yet or if the
+     * changeset isn't known.
+     *
+     * @return the id of the changeset this primitive was last uploaded to.
+     */
+    public int getChangesetId() {
+        return changesetId;
+    }
+
+    /**
+     * Sets the changeset id of this primitive. Can't be set on a new
+     * primitive.
+     *
+     * @param changesetId the id. >= 0 required.
+     * @throws IllegalStateException thrown if this primitive is new.
+     * @throws IllegalArgumentException thrown if id < 0
+     */
+    public void setChangesetId(int changesetId) throws IllegalStateException, IllegalArgumentException {
+        boolean locked = writeLock();
+        try {
+            if (this.changesetId == changesetId)
+                return;
+            if (changesetId < 0)
+                throw new IllegalArgumentException(MessageFormat.format("Parameter ''{0}'' >= 0 expected, got {1}", "changesetId", changesetId));
+            if (isNew() && changesetId > 0)
+                throw new IllegalStateException(tr("Cannot assign a changesetId > 0 to a new primitive. Value of changesetId is {0}", changesetId));
+
+            int old = this.changesetId;
+            this.changesetId = changesetId;
+            if (dataSet != null) {
+                dataSet.fireChangesetIdChanged(this, old, changesetId);
+            }
+        } finally {
+            writeUnlock(locked);
+        }
+    }
+
+    /**
+     * Replies the unique primitive id for this primitive
+     *
+     * @return the unique primitive id for this primitive
+     */
+    public PrimitiveId getPrimitiveId() {
+        return new SimplePrimitiveId(getUniqueId(), getType());
+    }
+
+    public void setTimestamp(Date timestamp) {
+        boolean locked = writeLock();
+        try {
+            this.timestamp = (int)(timestamp.getTime() / 1000);
+        } finally {
+            writeUnlock(locked);
+        }
+    }
+
+    /**
+     * Time of last modification to this object. This is not set by JOSM but
+     * read from the server and delivered back to the server unmodified. It is
+     * used to check against edit conflicts.
+     *
+     */
+    public Date getTimestamp() {
+        return new Date(timestamp * 1000l);
+    }
+
+    public boolean isTimestampEmpty() {
+        return timestamp == 0;
+    }
+
+    private int timestamp;
+
+    /* -------
+    /* FLAGS
+    /* ------*/
+
+    private volatile short flags = FLAG_VISIBLE;   // visible per default
+
+    private void updateFlagsNoLock(int flag, boolean value) {
+        if (value) {
+            flags |= flag;
+        } else {
+            flags &= ~flag;
+        }
+    }
+
+    private void updateFlags(int flag, boolean value) {
+        boolean locked = writeLock();
+        try {
+            updateFlagsNoLock(flag, value);
+        } finally {
+            writeUnlock(locked);
+        }
+    }
 
     /**
      * Make the primitive disabled (e.g. if a filter applies).
@@ -314,11 +617,12 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      *             just shown in gray color.
      */
     public void setDisabledState(boolean hide) {
-        flags |= FLAG_DISABLED;
-        if (hide) {
-            flags |= FLAG_HIDE_IF_DISABLED;
-        } else {
-            flags &= ~FLAG_HIDE_IF_DISABLED;
+        boolean locked = writeLock();
+        try {
+            updateFlagsNoLock(FLAG_DISABLED, true);
+            updateFlagsNoLock(FLAG_HIDE_IF_DISABLED, hide);
+        } finally {
+            writeUnlock(locked);
         }
     }
 
@@ -328,8 +632,7 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * again.
      */
     public void unsetDisabledState() {
-        flags &= ~FLAG_DISABLED;
-        flags &= ~FLAG_HIDE_IF_DISABLED;
+        updateFlags(FLAG_DISABLED + FLAG_HIDE_IF_DISABLED, false);
     }
 
     /**
@@ -359,11 +662,7 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @param modified true, if this primitive is to be modified
      */
     public void setModified(boolean modified) {
-        if (modified) {
-            flags |= FLAG_MODIFIED;
-        } else {
-            flags &= ~FLAG_MODIFIED;
-        }
+        updateFlags(FLAG_MODIFIED, modified);
     }
 
     /**
@@ -418,70 +717,6 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
     }
 
     /**
-     * Some predicates, that describe conditions on primitives.
-     */
-    public static Predicate<OsmPrimitive> isUsablePredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return primitive.isUsable();
-        }
-    };
-
-    public static Predicate<OsmPrimitive> isSelectablePredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return primitive.isSelectable();
-        }
-    };
-
-    public static Predicate<OsmPrimitive> nonDeletedPredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return !primitive.isDeleted();
-        }
-    };
-
-    public static Predicate<OsmPrimitive> nonDeletedCompletePredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return !primitive.isDeleted() && !primitive.isIncomplete();
-        }
-    };
-
-    public static Predicate<OsmPrimitive> nonDeletedPhysicalPredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return !primitive.isDeleted() && !primitive.isIncomplete() && !(primitive instanceof Relation);
-        }
-    };
-
-    public static Predicate<OsmPrimitive> modifiedPredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return primitive.isModified();
-        }
-    };
-
-    public static Predicate<OsmPrimitive> nodePredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return primitive.getClass() == Node.class;
-        }
-    };
-
-    public static Predicate<OsmPrimitive> wayPredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return primitive.getClass() == Way.class;
-        }
-    };
-
-    public static Predicate<OsmPrimitive> relationPredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return primitive.getClass() == Relation.class;
-        }
-    };
-
-    public static Predicate<OsmPrimitive> allPredicate = new Predicate<OsmPrimitive>() {
-        public boolean evaluate(OsmPrimitive primitive) {
-            return true;
-        }
-    };
-
-
-    /**
      * Replies true if this primitive is either unknown to the server (i.e. its id
      * is 0) or it is known to the server and it hasn't be deleted on the server.
      * Replies false, if this primitive is known on the server and has been deleted
@@ -502,126 +737,86 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * id==0
      */
     public void setVisible(boolean visible) throws IllegalStateException{
-        if (isNew() && visible == false)
-            throw new IllegalStateException(tr("A primitive with ID = 0 cannot be invisible."));
-        if (visible) {
-            flags |= FLAG_VISIBLE;
-        } else {
-            flags &= ~FLAG_VISIBLE;
+        boolean locked = writeLock();
+        try {
+            if (isNew() && visible == false)
+                throw new IllegalStateException(tr("A primitive with ID = 0 cannot be invisible."));
+            updateFlagsNoLock(FLAG_VISIBLE, visible);
+        } finally {
+            writeUnlock(locked);
         }
     }
 
     /**
-     * Replies the version number as returned by the API. The version is 0 if the id is 0 or
-     * if this primitive is incomplete.
+     * Sets whether this primitive is deleted or not.
      *
-     * @see #setVersion(int)
+     * Also marks this primitive as modified if deleted is true.
+     *
+     * @param deleted  true, if this primitive is deleted; false, otherwise
      */
-    public long getVersion() {
-        return version;
-    }
-
-    /**
-     * Replies the id of this primitive.
-     *
-     * @return the id of this primitive.
-     */
-    public long getId() {
-        return id >= 0?id:0;
-    }
-
-    /**
-     *
-     * @return Osm id if primitive already exists on the server. Unique negative value if primitive is new
-     */
-    public long getUniqueId() {
-        return id;
-    }
-
-    /**
-     *
-     * @return True if primitive is new (not yet uploaded the server, id <= 0)
-     */
-    public boolean isNew() {
-        return id <= 0;
-    }
-
-    /**
-     *
-     * @return True if primitive is new or undeleted
-     * @see #isNew()
-     * @see #isUndeleted()
-     */
-    public boolean isNewOrUndeleted() {
-        return (id <= 0) || ((flags & (FLAG_VISIBLE + FLAG_DELETED)) == 0);
-    }
-
-    /**
-     * Sets the id and the version of this primitive if it is known to the OSM API.
-     *
-     * Since we know the id and its version it can't be incomplete anymore. incomplete
-     * is set to false.
-     *
-     * @param id the id. > 0 required
-     * @param version the version > 0 required
-     * @throws IllegalArgumentException thrown if id <= 0
-     * @throws IllegalArgumentException thrown if version <= 0
-     * @throws DataIntegrityProblemException If id is changed and primitive was already added to the dataset
-     */
-    public void setOsmId(long id, int version) {
-        if (id <= 0)
-            throw new IllegalArgumentException(tr("ID > 0 expected. Got {0}.", id));
-        if (version <= 0)
-            throw new IllegalArgumentException(tr("Version > 0 expected. Got {0}.", version));
-        if (dataSet != null && id != this.id) {
-            DataSet datasetCopy = dataSet;
-            // Reindex primitive
-            datasetCopy.removePrimitive(this);
-            this.id = id;
-            datasetCopy.addPrimitive(this);
+    public void setDeleted(boolean deleted) {
+        boolean locked = writeLock();
+        try {
+            updateFlagsNoLock(FLAG_DELETED, deleted);
+            setModified(deleted ^ !isVisible());
+            if (dataSet != null) {
+                if (deleted) {
+                    dataSet.firePrimitivesRemoved(Collections.singleton(this), false);
+                } else {
+                    dataSet.firePrimitivesAdded(Collections.singleton(this), false);
+                }
+            }
+        } finally {
+            writeUnlock(locked);
         }
-        this.id = id;
-        this.version = version;
-        this.setIncomplete(false);
     }
+
 
     /**
-     * Clears the id and version known to the OSM API. The id and the version is set to 0.
-     * incomplete is set to false. It's preferred to use copy constructor with clearId set to true instead
-     * of calling this method.
-     *
-     * <strong>Caution</strong>: Do not use this method on primitives which are already added to a {@see DataSet}.
-     *
-     * @throws DataIntegrityProblemException If primitive was already added to the dataset
+     * If set to true, this object is incomplete, which means only the id
+     * and type is known (type is the objects instance class)
      */
-    public void clearOsmId() {
-        if (dataSet != null)
-            throw new DataIntegrityProblemException("Method cannot be called after primitive was added to the dataset");
-        this.id = generateUniqueId();
-        this.version = 0;
-        this.changesetId = 0; // reset changeset id on a new object
-        this.setIncomplete(false);
+    private void setIncomplete(boolean incomplete) {
+        boolean locked = writeLock();
+        try {
+            if (dataSet != null && incomplete != this.isIncomplete()) {
+                if (incomplete) {
+                    dataSet.firePrimitivesRemoved(Collections.singletonList(this), true);
+                } else {
+                    dataSet.firePrimitivesAdded(Collections.singletonList(this), true);
+                }
+            }
+            updateFlagsNoLock(FLAG_INCOMPLETE, incomplete);
+        }  finally {
+            writeUnlock(locked);
+        }
     }
 
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = (int)(timestamp.getTime() / 1000);
+    public boolean isIncomplete() {
+        return (flags & FLAG_INCOMPLETE) != 0;
     }
 
-    /**
-     * Time of last modification to this object. This is not set by JOSM but
-     * read from the server and delivered back to the server unmodified. It is
-     * used to check against edit conflicts.
-     *
-     */
-    public Date getTimestamp() {
-        return new Date(timestamp * 1000l);
+    public boolean isSelected() {
+        return dataSet != null && dataSet.isSelected(this);
     }
 
-    public boolean isTimestampEmpty() {
-        return timestamp == 0;
+    public void setHighlighted(boolean highlighted) {
+        if (isHighlighted() != highlighted) {
+            updateFlags(FLAG_HIGHLIGHTED, highlighted);
+            if (dataSet != null) {
+                dataSet.fireHighlightingChanged(this);
+            }
+        }
     }
 
-    private int timestamp;
+    public boolean isHighlighted() {
+        return (flags & FLAG_HIGHLIGHTED) != 0;
+    }
+
+    /*----------------------------------
+     * UNINTERESTING AND DIRECTION KEYS
+     *----------------------------------*/
+
 
     private static volatile Collection<String> uninteresting = null;
     /**
@@ -634,7 +829,8 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
         if (uninteresting == null) {
             uninteresting = Main.pref.getCollection("tags.uninteresting",
                     Arrays.asList(new String[]{"source", "source_ref", "source:", "note", "comment",
-                            "converted_by", "created_by", "watch", "watch:"}));
+                            "converted_by", "created_by", "watch", "watch:", "fixme", "FIXME",
+                    "description"}));
         }
         return uninteresting;
     }
@@ -706,123 +902,61 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
         }
     }
 
-    /**
-     * Replies a list of direction-dependent keys that make an object
-     * direction dependent.
-     *
-     * @return  a list of direction-dependent keys that make an object
-     * direction dependent.
-     */
-    @Deprecated
-    public static Collection<String> getDirectionKeys() {
-        return Main.pref.getCollection("tags.direction",
-                Arrays.asList("oneway","incline","incline_steep","aerialway"));
-    }
-
-    /**
-     * Implementation of the visitor scheme. Subclasses have to call the correct
-     * visitor function.
-     * @param visitor The visitor from which the visit() function must be called.
-     */
-    abstract public void visit(Visitor visitor);
-
-    /**
-     * Sets whether this primitive is deleted or not.
-     *
-     * Also marks this primitive as modified if deleted is true.
-     *
-     * @param deleted  true, if this primitive is deleted; false, otherwise
-     */
-    public void setDeleted(boolean deleted) {
-        if (deleted) {
-            flags |= FLAG_DELETED;
-        } else {
-            flags &= ~FLAG_DELETED;
-        }
-        setModified(deleted ^ !isVisible());
-        if (dataSet != null) {
-            if (deleted) {
-                dataSet.firePrimitivesRemoved(Collections.singleton(this), false);
-            } else {
-                dataSet.firePrimitivesAdded(Collections.singleton(this), false);
+    private void updateTagged() {
+        if (keys != null) {
+            for (String key: keySet()) {
+                if (!isUninterestingKey(key)) {
+                    updateFlagsNoLock(FLAG_TAGGED, true);
+                    return;
+                }
             }
         }
+        updateFlagsNoLock(FLAG_TAGGED, false);
     }
 
     /**
-     * Replies the user who has last touched this object. May be null.
-     *
-     * @return the user who has last touched this object. May be null.
+     * true if this object is considered "tagged". To be "tagged", an object
+     * must have one or more "interesting" tags. "created_by" and "source"
+     * are typically considered "uninteresting" and do not make an object
+     * "tagged".
      */
-    public User getUser() {
-        return user;
+    public boolean isTagged() {
+        return (flags & FLAG_TAGGED) != 0;
     }
 
-    /**
-     * Sets the user who has last touched this object.
-     *
-     * @param user the user
-     */
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    /**
-     * Replies the id of the changeset this primitive was last uploaded to.
-     * 0 if this primitive wasn't uploaded to a changeset yet or if the
-     * changeset isn't known.
-     *
-     * @return the id of the changeset this primitive was last uploaded to.
-     */
-    public int getChangesetId() {
-        return changesetId;
-    }
-
-    /**
-     * Sets the changeset id of this primitive. Can't be set on a new
-     * primitive.
-     *
-     * @param changesetId the id. >= 0 required.
-     * @throws IllegalStateException thrown if this primitive is new.
-     * @throws IllegalArgumentException thrown if id < 0
-     */
-    public void setChangesetId(int changesetId) throws IllegalStateException, IllegalArgumentException {
-        if (this.changesetId == changesetId)
-            return;
-        if (changesetId < 0)
-            throw new IllegalArgumentException(MessageFormat.format("Parameter ''{0}'' >= 0 expected, got {1}", "changesetId", changesetId));
-        if (isNew() && changesetId > 0)
-            throw new IllegalStateException(tr("Cannot assign a changesetId > 0 to a new primitive. Value of changesetId is {0}", changesetId));
-        int old = this.changesetId;
-        this.changesetId = changesetId;
-        if (dataSet != null) {
-            dataSet.fireChangesetIdChanged(this, old, changesetId);
+    private void updateDirectionFlags() {
+        boolean hasDirections = false;
+        boolean directionReversed = false;
+        if (reversedDirectionKeys.match(this)) {
+            hasDirections = true;
+            directionReversed = true;
         }
+        if (directionKeys.match(this)) {
+            hasDirections = true;
+        }
+
+        updateFlagsNoLock(FLAG_DIRECTION_REVERSED, directionReversed);
+        updateFlagsNoLock(FLAG_HAS_DIRECTIONS, hasDirections);
     }
 
     /**
-     * Equal, if the id (and class) is equal.
-     *
-     * An primitive is equal to its incomplete counter part.
+     * true if this object has direction dependent tags (e.g. oneway)
      */
-    @Override public boolean equals(Object obj) {
-        if (obj instanceof OsmPrimitive)
-            return ((OsmPrimitive)obj).id == id && obj.getClass() == getClass();
-        return false;
+    public boolean hasDirectionKeys() {
+        return (flags & FLAG_HAS_DIRECTIONS) != 0;
     }
 
-    /**
-     * Return the id plus the class type encoded as hashcode or super's hashcode if id is 0.
-     *
-     * An primitive has the same hashcode as its incomplete counterpart.
-     */
-    @Override public final int hashCode() {
-        return (int)id;
+    public boolean reversedDirection() {
+        return (flags & FLAG_DIRECTION_REVERSED) != 0;
     }
 
     /*------------
      * Keys handling
      ------------*/
+
+    // Note that all methods that read keys first make local copy of keys array reference. This is to ensure thread safety - reading
+    // doesn't have to be locked so it's possible that keys array will be modified. But all write methods make copy of keys array so
+    // the array itself will be never modified - only reference will be changed
 
     /**
      * The key/value list for this primitive.
@@ -835,10 +969,10 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      *
      * @return tags of this primitive. Changes made in returned map are not mapped
      * back to the primitive, use setKeys() to modify the keys
-     * @since 1924
      */
     public Map<String, String> getKeys() {
         Map<String, String> result = new HashMap<String, String>();
+        String[] keys = this.keys;
         if (keys != null) {
             for (int i=0; i<keys.length ; i+=2) {
                 result.put(keys[i], keys[i + 1]);
@@ -852,23 +986,27 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * If <code>keys</code> is null removes all existing key/value pairs.
      *
      * @param keys the key/value pairs to set. If null, removes all existing key/value pairs.
-     * @since 1924
      */
     public void setKeys(Map<String, String> keys) {
-        Map<String, String> originalKeys = getKeys();
-        if (keys == null || keys.isEmpty()) {
-            this.keys = null;
+        boolean locked = writeLock();
+        try {
+            Map<String, String> originalKeys = getKeys();
+            if (keys == null || keys.isEmpty()) {
+                this.keys = null;
+                keysChangedImpl(originalKeys);
+                return;
+            }
+            String[] newKeys = new String[keys.size() * 2];
+            int index = 0;
+            for (Entry<String, String> entry:keys.entrySet()) {
+                newKeys[index++] = entry.getKey();
+                newKeys[index++] = entry.getValue();
+            }
+            this.keys = newKeys;
             keysChangedImpl(originalKeys);
-            return;
+        } finally {
+            writeUnlock(locked);
         }
-        String[] newKeys = new String[keys.size() * 2];
-        int index = 0;
-        for (Entry<String, String> entry:keys.entrySet()) {
-            newKeys[index++] = entry.getKey();
-            newKeys[index++] = entry.getValue();
-        }
-        this.keys = newKeys;
-        keysChangedImpl(originalKeys);
     }
 
     /**
@@ -881,31 +1019,36 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @see #remove(String)
      */
     public final void put(String key, String value) {
-        Map<String, String> originalKeys = getKeys();
-        if (key == null)
-            return;
-        else if (value == null) {
-            remove(key);
-        } else if (keys == null){
-            keys = new String[] {key, value};
-            keysChangedImpl(originalKeys);
-        } else {
-            for (int i=0; i<keys.length;i+=2) {
-                if (keys[i].equals(key)) {
-                    keys[i+1] = value;
-                    keysChangedImpl(originalKeys);
-                    return;
+        boolean locked = writeLock();
+        try {
+            Map<String, String> originalKeys = getKeys();
+            if (key == null)
+                return;
+            else if (value == null) {
+                remove(key);
+            } else if (keys == null){
+                keys = new String[] {key, value};
+                keysChangedImpl(originalKeys);
+            } else {
+                for (int i=0; i<keys.length;i+=2) {
+                    if (keys[i].equals(key)) {
+                        keys[i+1] = value;  // This modifies the keys array but it doesn't make it invalidate for any time so its ok (see note no top)
+                        keysChangedImpl(originalKeys);
+                        return;
+                    }
                 }
+                String[] newKeys = new String[keys.length + 2];
+                for (int i=0; i< keys.length;i+=2) {
+                    newKeys[i] = keys[i];
+                    newKeys[i+1] = keys[i+1];
+                }
+                newKeys[keys.length] = key;
+                newKeys[keys.length + 1] = value;
+                keys = newKeys;
+                keysChangedImpl(originalKeys);
             }
-            String[] newKeys = new String[keys.length + 2];
-            for (int i=0; i< keys.length;i+=2) {
-                newKeys[i] = keys[i];
-                newKeys[i+1] = keys[i+1];
-            }
-            newKeys[keys.length] = key;
-            newKeys[keys.length + 1] = value;
-            keys = newKeys;
-            keysChangedImpl(originalKeys);
+        } finally {
+            writeUnlock(locked);
         }
     }
     /**
@@ -914,25 +1057,30 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @param key  the key to be removed. Ignored, if key is null.
      */
     public final void remove(String key) {
-        if (key == null || keys == null) return;
-        if (!hasKey(key))
-            return;
-        Map<String, String> originalKeys = getKeys();
-        if (keys.length == 2) {
-            keys = null;
-            keysChangedImpl(originalKeys);
-            return;
-        }
-        String[] newKeys = new String[keys.length - 2];
-        int j=0;
-        for (int i=0; i < keys.length; i+=2) {
-            if (!keys[i].equals(key)) {
-                newKeys[j++] = keys[i];
-                newKeys[j++] = keys[i+1];
+        boolean locked = writeLock();
+        try {
+            if (key == null || keys == null) return;
+            if (!hasKey(key))
+                return;
+            Map<String, String> originalKeys = getKeys();
+            if (keys.length == 2) {
+                keys = null;
+                keysChangedImpl(originalKeys);
+                return;
             }
+            String[] newKeys = new String[keys.length - 2];
+            int j=0;
+            for (int i=0; i < keys.length; i+=2) {
+                if (!keys[i].equals(key)) {
+                    newKeys[j++] = keys[i];
+                    newKeys[j++] = keys[i+1];
+                }
+            }
+            keys = newKeys;
+            keysChangedImpl(originalKeys);
+        } finally {
+            writeUnlock(locked);
         }
-        keys = newKeys;
-        keysChangedImpl(originalKeys);
     }
 
     /**
@@ -941,10 +1089,15 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @since 1843
      */
     public final void removeAll() {
-        if (keys != null) {
-            Map<String, String> originalKeys = getKeys();
-            keys = null;
-            keysChangedImpl(originalKeys);
+        boolean locked = writeLock();
+        try {
+            if (keys != null) {
+                Map<String, String> originalKeys = getKeys();
+                keys = null;
+                keysChangedImpl(originalKeys);
+            }
+        } finally {
+            writeUnlock(locked);
         }
     }
 
@@ -956,6 +1109,7 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @return the value for key <code>key</code>.
      */
     public final String get(String key) {
+        String[] keys = this.keys;
         if (key == null)
             return null;
         if (keys == null)
@@ -967,6 +1121,7 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
     }
 
     public final Collection<String> keySet() {
+        String[] keys = this.keys;
         if (keys == null)
             return Collections.emptySet();
         Set<String> result = new HashSet<String>(keys.length / 2);
@@ -1002,6 +1157,7 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @return true, if his primitive has a tag with key <code>key</code>
      */
     public boolean hasKey(String key) {
+        String[] keys = this.keys;
         if (key == null) return false;
         if (keys == null) return false;
         for (int i=0; i< keys.length;i+=2) {
@@ -1100,6 +1256,7 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
         // Returns only referrers that are members of the same dataset (primitive can have some fake references, for example
         // when way is cloned
         checkDataset();
+        Object referrers = this.referrers;
         List<OsmPrimitive> result = new ArrayList<OsmPrimitive>();
         if (referrers != null) {
             if (referrers instanceof OsmPrimitive) {
@@ -1119,11 +1276,24 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
         return result;
     }
 
+    /*-----------------
+     * OTHER METHODS
+     *----------------/
+
+    /**
+     * Implementation of the visitor scheme. Subclasses have to call the correct
+     * visitor function.
+     * @param visitor The visitor from which the visit() function must be called.
+     */
+    abstract public void visit(Visitor visitor);
+
+
     /**
      * Get and write all attributes from the parameter. Does not fire any listener, so
      * use this only in the data initializing phase
      */
     public void cloneFrom(OsmPrimitive other) {
+        // write lock is provided by subclasses
         if (id != other.id && dataSet != null)
             throw new DataIntegrityProblemException("Osm id cannot be changed after primitive was added to the dataset");
         setKeys(other.getKeys());
@@ -1162,19 +1332,24 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @throws DataIntegrityProblemException thrown if other isn't new and other.getId() != this.getId()
      */
     public void mergeFrom(OsmPrimitive other) {
-        CheckParameterUtil.ensureParameterNotNull(other, "other");
-        if (other.isNew() ^ isNew())
-            throw new DataIntegrityProblemException(tr("Cannot merge because either of the participating primitives is new and the other is not"));
-        if (! other.isNew() && other.getId() != id)
-            throw new DataIntegrityProblemException(tr("Cannot merge primitives with different ids. This id is {0}, the other is {1}", id, other.getId()));
+        boolean locked = writeLock();
+        try {
+            CheckParameterUtil.ensureParameterNotNull(other, "other");
+            if (other.isNew() ^ isNew())
+                throw new DataIntegrityProblemException(tr("Cannot merge because either of the participating primitives is new and the other is not"));
+            if (! other.isNew() && other.getId() != id)
+                throw new DataIntegrityProblemException(tr("Cannot merge primitives with different ids. This id is {0}, the other is {1}", id, other.getId()));
 
-        setKeys(other.getKeys());
-        timestamp = other.timestamp;
-        version = other.version;
-        setIncomplete(other.isIncomplete());
-        flags = other.flags;
-        user= other.user;
-        changesetId = other.changesetId;
+            setKeys(other.getKeys());
+            timestamp = other.timestamp;
+            version = other.version;
+            setIncomplete(other.isIncomplete());
+            flags = other.flags;
+            user= other.user;
+            changesetId = other.changesetId;
+        } finally {
+            writeUnlock(locked);
+        }
     }
 
     /**
@@ -1228,61 +1403,6 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
         && changesetId == other.changesetId;
     }
 
-    private void updateTagged() {
-        if (keys != null) {
-            for (String key: keySet()) {
-                if (!isUninterestingKey(key)) {
-                    flags |= FLAG_TAGGED;
-                    return;
-                }
-            }
-        }
-        flags &= ~FLAG_TAGGED;
-    }
-
-    /**
-     * true if this object is considered "tagged". To be "tagged", an object
-     * must have one or more "interesting" tags. "created_by" and "source"
-     * are typically considered "uninteresting" and do not make an object
-     * "tagged".
-     */
-    public boolean isTagged() {
-        return (flags & FLAG_TAGGED) != 0;
-    }
-
-    private void updateDirectionFlags() {
-        boolean hasDirections = false;
-        boolean directionReversed = false;
-        if (reversedDirectionKeys.match(this)) {
-            hasDirections = true;
-            directionReversed = true;
-        }
-        if (directionKeys.match(this)) {
-            hasDirections = true;
-        }
-
-        if (directionReversed) {
-            flags |= FLAG_DIRECTION_REVERSED;
-        } else {
-            flags &= ~FLAG_DIRECTION_REVERSED;
-        }
-        if (hasDirections) {
-            flags |= FLAG_HAS_DIRECTIONS;
-        } else {
-            flags &= ~FLAG_HAS_DIRECTIONS;
-        }
-    }
-
-    /**
-     * true if this object has direction dependent tags (e.g. oneway)
-     */
-    public boolean hasDirectionKeys() {
-        return (flags & FLAG_HAS_DIRECTIONS) != 0;
-    }
-
-    public boolean reversedDirection() {
-        return (flags & FLAG_DIRECTION_REVERSED) != 0;
-    }
     /**
      * Replies the name of this primitive. The default implementation replies the value
      * of the tag <tt>name</tt> or null, if this tag is not present.
@@ -1290,9 +1410,7 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @return the name of this primitive
      */
     public String getName() {
-        if (get("name") != null)
-            return get("name");
-        return null;
+        return get("name");
     }
 
     /**
@@ -1333,6 +1451,7 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @param data
      */
     public void load(PrimitiveData data) {
+        // Write lock is provided by subclasses
         setKeys(data.getKeys());
         setTimestamp(data.getTimestamp());
         user = data.getUser();
@@ -1363,6 +1482,18 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
         data.setChangesetId(changesetId);
         data.setVersion(version);
     }
+
+
+    public abstract BBox getBBox();
+
+    /**
+     * Called by Dataset to update cached position information of primitive (bbox, cached EarthNorth, ...)
+     */
+    public abstract void updatePosition();
+
+    /*----------------
+     * OBJECT METHODS
+     *---------------*/
 
     protected String getFlagsAsString() {
         StringBuilder builder = new StringBuilder();
@@ -1398,63 +1529,24 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
         return builder.toString();
     }
 
-    public abstract BBox getBBox();
-
     /**
-     * Called by Dataset to update cached position information of primitive (bbox, cached EarthNorth, ...)
-     */
-    public abstract void updatePosition();
-
-    /**
-     * Replies the unique primitive id for this primitive
+     * Equal, if the id (and class) is equal.
      *
-     * @return the unique primitive id for this primitive
+     * An primitive is equal to its incomplete counter part.
      */
-    public PrimitiveId getPrimitiveId() {
-        return new SimplePrimitiveId(getUniqueId(), getType());
+    @Override public boolean equals(Object obj) {
+        if (obj instanceof OsmPrimitive)
+            return ((OsmPrimitive)obj).id == id && obj.getClass() == getClass();
+        return false;
     }
 
     /**
-     * If set to true, this object is incomplete, which means only the id
-     * and type is known (type is the objects instance class)
+     * Return the id plus the class type encoded as hashcode or super's hashcode if id is 0.
+     *
+     * An primitive has the same hashcode as its incomplete counterpart.
      */
-    private void setIncomplete(boolean incomplete) {
-        if (dataSet != null && incomplete != this.isIncomplete()) {
-            if (incomplete) {
-                dataSet.firePrimitivesRemoved(Collections.singletonList(this), true);
-            } else {
-                dataSet.firePrimitivesAdded(Collections.singletonList(this), true);
-            }
-        }
-        if (incomplete) {
-            flags |= FLAG_INCOMPLETE;
-        } else {
-            flags &= ~FLAG_INCOMPLETE;
-        }
+    @Override public final int hashCode() {
+        return (int)id;
     }
 
-    public boolean isIncomplete() {
-        return (flags & FLAG_INCOMPLETE) != 0;
-    }
-
-    public boolean isSelected() {
-        return dataSet != null && dataSet.isSelected(this);
-    }
-
-    public void setHighlighted(boolean highlighted) {
-        if (isHighlighted() != highlighted) {
-            if (highlighted) {
-                flags |= FLAG_HIGHLIGHTED;
-            } else {
-                flags &= ~FLAG_HIGHLIGHTED;
-            }
-            if (dataSet != null) {
-                dataSet.fireHighlightingChanged(this);
-            }
-        }
-    }
-
-    public boolean isHighlighted() {
-        return (flags & FLAG_HIGHLIGHTED) != 0;
-    }
 }

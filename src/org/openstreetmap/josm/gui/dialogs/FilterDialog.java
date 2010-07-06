@@ -17,8 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
@@ -26,7 +25,6 @@ import javax.swing.table.TableCellRenderer;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchAction;
 import org.openstreetmap.josm.data.osm.Filter;
-import org.openstreetmap.josm.data.osm.Filters;
 import org.openstreetmap.josm.data.osm.event.AbstractDatasetChangedEvent;
 import org.openstreetmap.josm.data.osm.event.DataSetListener;
 import org.openstreetmap.josm.data.osm.event.DataSetListenerAdapter;
@@ -40,10 +38,10 @@ import org.openstreetmap.josm.tools.Shortcut;
  *
  * @author Petr_Dlouhý
  */
-public class FilterDialog extends ToggleDialog implements Listener, TableModelListener {
+public class FilterDialog extends ToggleDialog implements Listener {
 
     private JTable userTable;
-    private Filters filters = new Filters();
+    private FilterTableModel filterModel = new FilterTableModel();
     private SideButton addButton;
     private SideButton editButton;
     private SideButton deleteButton;
@@ -61,13 +59,13 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
     @Override
     public void showNotify() {
         DatasetEventManager.getInstance().addDatasetListener(listenerAdapter, FireMode.IN_EDT_CONSOLIDATED);
-        filters.executeFilters();
+        filterModel.executeFilters();
     }
 
     @Override
     public void hideNotify() {
         DatasetEventManager.getInstance().removeDatasetListener(listenerAdapter);
-        filters.clearFilterFlags();
+        filterModel.clearFilterFlags();
         Main.map.mapView.repaint();
     }
 
@@ -79,8 +77,7 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
             public void actionPerformed(ActionEvent evt){
                 Filter filter = (Filter)SearchAction.showSearchDialog(new Filter());
                 if(filter != null){
-                    filters.addFilter(filter);
-                    filters.executeFilters();
+                    filterModel.addFilter(filter);
                 }
             }
         });
@@ -91,11 +88,10 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
             public void actionPerformed(ActionEvent evt){
                 int index = userTable.getSelectionModel().getMinSelectionIndex();
                 if(index < 0) return;
-                Filter f = filters.getFilter(index);
+                Filter f = filterModel.getFilter(index);
                 Filter filter = (Filter)SearchAction.showSearchDialog(f);
                 if(filter != null){
-                    filters.setFilter(index, filter);
-                    filters.executeFilters();
+                    filterModel.setFilter(index, filter);
                 }
             }
         });
@@ -106,7 +102,7 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
             public void actionPerformed(ActionEvent evt){
                 int index = userTable.getSelectionModel().getMinSelectionIndex();
                 if(index < 0) return;
-                filters.removeFilter(index);
+                filterModel.removeFilter(index);
             }
         });
         pnl.add(deleteButton);
@@ -116,7 +112,7 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
             public void actionPerformed(ActionEvent evt){
                 int index = userTable.getSelectionModel().getMinSelectionIndex();
                 if(index < 0) return;
-                filters.moveUpFilter(index);
+                filterModel.moveUpFilter(index);
                 userTable.getSelectionModel().setSelectionInterval(index-1, index-1);
             }
         });
@@ -127,7 +123,7 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
             public void actionPerformed(ActionEvent evt){
                 int index = userTable.getSelectionModel().getMinSelectionIndex();
                 if(index < 0) return;
-                filters.moveDownFilter(index);
+                filterModel.moveDownFilter(index);
                 userTable.getSelectionModel().setSelectionInterval(index+1, index+1);
             }
         });
@@ -146,7 +142,7 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
     protected void build() {
         JPanel pnl = new JPanel();
         pnl.setLayout(new BorderLayout());
-        userTable = new JTable(filters){
+        userTable = new JTable(filterModel){
             @Override
             protected JTableHeader createDefaultTableHeader() {
                 return new JTableHeader(columnModel) {
@@ -160,8 +156,6 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
                 };
             }
         };
-
-        filters.addTableModelListener(this);
 
         userTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -178,8 +172,6 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
         userTable.setDefaultRenderer(Boolean.class, new BooleanRenderer());
         userTable.setDefaultRenderer(String.class, new StringRenderer());
 
-        tableChanged(null);
-
         pnl.add(new JScrollPane(userTable), BorderLayout.CENTER);
 
         // -- the button row
@@ -189,13 +181,13 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
     }
 
     public void processDatasetEvent(AbstractDatasetChangedEvent event) {
-        filters.executeFilters();
+        filterModel.executeFilters();
     }
 
     static class StringRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,int row,int column) {
-            Filters model = (Filters)table.getModel();
+            FilterTableModel model = (FilterTableModel)table.getModel();
             Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             cell.setEnabled(model.isCellEnabled(row, column));
             return cell;
@@ -204,7 +196,7 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
 
     static class BooleanRenderer extends JCheckBox implements TableCellRenderer {
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,int row,int column) {
-            Filters model = (Filters)table.getModel();
+            FilterTableModel model = (FilterTableModel)table.getModel();
             setSelected((Boolean)value);
             setEnabled(model.isCellEnabled(row, column));
             setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -212,11 +204,15 @@ public class FilterDialog extends ToggleDialog implements Listener, TableModelLi
         }
     }
 
-    public void tableChanged(TableModelEvent e){
-        setTitle(tr("Filter Hidden:{0} Disabled:{1}", filters.disabledAndHiddenCount, filters.disabledCount));
+    public void updateDialogHeader() {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                setTitle(tr("Filter Hidden:{0} Disabled:{1}", filterModel.disabledAndHiddenCount, filterModel.disabledCount));
+            }
+        });
     }
 
     public void drawOSDText(Graphics2D g) {
-        filters.drawOSDText(g);
+        filterModel.drawOSDText(g);
     }
 }

@@ -62,9 +62,9 @@ For external files the <rules> should have following elements:
 - version          a version number of some sort (e.g. creation date)
 - description      what is your style meant to be
 - shortdescription very short description
-- link             a link to a helpful website (optional)
+- link       a link to a helpful website (optional)
 - The fields description, shortdescription and link may also be localized (e.g. de.link)
-- name             is the name of the style
+- name       is the name of the style
                    - when the style replaces the whole rendering choose a new name
                    - when the style is additional choose "standard" or don't use name tag
 -->
@@ -662,7 +662,7 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="highway" v="living_street"/>
-		<line width="2" realwidth="3" colour="street#c0c0c0" dashed="9" dashedcolour="livingdashed#00ff00" />
+		<line width="2" realwidth="3" colour="street#c0c0c0" dashed="9" dashedcolour="livingdashed#00ff00"/>
 		<icon annotate="true" src="misc/deprecated.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>40000</scale_max>
@@ -1456,7 +1456,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="piste:difficulty" v="easy"/>
 		<line width="6" colour="piste_easy#0000ff"/>
-		<area colour="piste_easy#0000ff"/>
+		<area colour="piste_easy#0000ff" closed="true"/>
 		<icon src="sport/skiing.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>30000</scale_max>
@@ -1465,7 +1465,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="piste:difficulty" v="intermediate"/>
 		<line width="6" colour="piste_intermediate#ff0000"/>
-		<area colour="piste_intermediate#ff0000"/>
+		<area colour="piste_intermediate#ff0000" closed="true"/>
 		<icon src="sport/skiing.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>30000</scale_max>
@@ -1474,7 +1474,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="piste:difficulty" v="advanced"/>
 		<line width="6" colour="piste_advanced#606060"/>
-		<area colour="piste_advanced#606060"/>
+		<area colour="piste_advanced#606060" closed="true"/>
 		<icon src="sport/skiing.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>30000</scale_max>
@@ -1483,7 +1483,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="piste:difficulty" v="expert"/>
 		<line width="6" colour="piste_expert#606060"/>
-		<area colour="piste_expert#606060"/>
+		<area colour="piste_expert#606060" closed="true"/>
 		<icon src="sport/skiing.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>30000</scale_max>
@@ -1492,7 +1492,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="piste:difficulty" v="freeride"/>
 		<line width="6" colour="piste_freeride#ffff00"/>
-		<area colour="piste_freeride#ffff00"/>
+		<area colour="piste_freeride#ffff00" closed="true"/>
 		<icon src="sport/skiing.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>30000</scale_max>
@@ -1501,7 +1501,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="piste:difficulty" v="novice"/>
 		<line width="6" colour="piste_novice#00ff00"/>
-		<area colour="piste_novice#00ff00"/>
+		<area colour="piste_novice#00ff00" closed="true"/>
 		<icon src="sport/skiing.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>300000</scale_max>
@@ -3758,7 +3758,55 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="sport" v="soccer"/>
+		<area colour="sport#bde3cb"/>
+		<icon src="sport/soccer.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="sport" v="australian_football"/>
+		<area colour="sport#bde3cb"/>
+		<icon src="sport/soccer.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="sport" v="american_football"/>
+		<area colour="sport#bde3cb"/>
+		<icon src="sport/soccer.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="sport" v="canadian_football"/>
+		<area colour="sport#bde3cb"/>
+		<icon src="sport/soccer.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="sport" v="gaelic_football"/>
+		<area colour="sport#bde3cb"/>
+		<icon src="sport/soccer.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="sport" v="rugby_league"/>
+		<area colour="sport#bde3cb"/>
+		<icon src="sport/football.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="sport" v="rugby_union"/>
 		<area colour="sport#bde3cb"/>
 		<icon src="sport/football.png"/>
 		<scale_min>1</scale_min>
@@ -3870,14 +3918,6 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
-		<condition k="sport" v="football"/>
-		<area colour="sport#bde3cb"/>
-		<icon src="sport/football.png"/>
-		<scale_min>1</scale_min>
-		<scale_max>50000</scale_max>
-	</rule>
-
-	<rule>
 		<condition k="sport" v="golf"/>
 		<area colour="sport#bde3cb"/>
 		<icon src="sport/golf.png"/>
@@ -3942,14 +3982,6 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
-		<condition k="sport" v="rugby"/>
-		<area colour="sport#bde3cb"/>
-		<icon src="sport/football.png"/>
-		<scale_min>1</scale_min>
-		<scale_max>50000</scale_max>
-	</rule>
-
-	<rule>
 		<condition k="sport" v="skating"/>
 		<area colour="sport#bde3cb"/>
 		<icon src="misc/no_icon.png"/>
@@ -3961,14 +3993,6 @@ For external files the <rules> should have following elements:
 		<condition k="sport" v="skateboard"/>
 		<area colour="sport#bde3cb"/>
 		<icon src="sport/skateboard.png"/>
-		<scale_min>1</scale_min>
-		<scale_max>50000</scale_max>
-	</rule>
-
-	<rule>
-		<condition k="sport" v="soccer"/>
-		<area colour="sport#bde3cb"/>
-		<icon src="sport/soccer.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -4357,40 +4381,54 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="addr:interpolation" v="even"/>
-                <line width="1" realwidth="1" dashed="true" colour="address#1C86EE"/>
+		<line width="1" realwidth="1" dashed="true" colour="address#1C86EE"/>
 		<scale_min>1</scale_min>
 		<scale_max>40000</scale_max>
 	</rule>
 
 	<rule>
 		<condition k="addr:interpolation" v="all"/>
-                <line width="1" realwidth="1" dashed="true" colour="address#1C86EE"/>
+		<line width="1" realwidth="1" dashed="true" colour="address#1C86EE"/>
 		<scale_min>1</scale_min>
 		<scale_max>40000</scale_max>
 	</rule>
 
-        <rule>
-                <condition k="addr:interpolation" v="alphabetic"/>
-                <line width="1" realwidth="1" dashed="true" colour="address#1C86EE"/>
-                <scale_min>1</scale_min>
-                <scale_max>40000</scale_max>
-        </rule>
+	<rule>
+		<condition k="addr:interpolation" v="alphabetic"/>
+		<line width="1" realwidth="1" dashed="true" colour="address#1C86EE"/>
+		<scale_min>1</scale_min>
+		<scale_max>40000</scale_max>
+	</rule>
+
+	<rule> 
+		<condition k="fixme"/> 
+		<icon annotate="true" src="fixme.png" priority="-10000"/>
+		<scale_min>1</scale_min> 
+		<scale_max>50000</scale_max> 
+	</rule> 
+
+	<rule> 
+		<condition k="FIXME"/> 
+		<icon annotate="true" src="fixme.png" priority="-10000"/>
+		<scale_min>1</scale_min> 
+		<scale_max>50000</scale_max> 
+	</rule> 
 
 <!--public_transport tags --> 
-    <rule> 
-        <condition k="public_transport" v="stop_position"/> 
-        <icon annotate="true" src="misc/no_icon.png"/>
-        <scale_min>1</scale_min> 
-        <scale_max>50000</scale_max> 
-    </rule> 
+	<rule> 
+		<condition k="public_transport" v="stop_position"/> 
+		<icon annotate="true" src="misc/no_icon.png"/>
+		<scale_min>1</scale_min> 
+		<scale_max>50000</scale_max> 
+	</rule> 
 
-    <rule> 
-        <condition k="public_transport" v="platform"/> 
-        <icon annotate="true" src="misc/no_icon.png"/>
-        <line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00" /> 
-        <scale_min>1</scale_min> 
-        <scale_max>50000</scale_max> 
-    </rule> 
+	<rule> 
+		<condition k="public_transport" v="platform"/> 
+		<icon annotate="true" src="misc/no_icon.png"/>
+		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/> 
+		<scale_min>1</scale_min> 
+		<scale_max>50000</scale_max> 
+	</rule> 
 
 <!--"deprecated" tags -->
 

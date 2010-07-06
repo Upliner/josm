@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Vector;
 
+import javax.swing.JColorChooser;
 import javax.swing.JFileChooser;
 import javax.swing.UIManager;
 
@@ -25,7 +26,9 @@ public class I18n {
     private enum PluralMode { MODE_NOTONE, MODE_NONE, MODE_GREATERONE,
         MODE_CS, MODE_AR, MODE_PL, MODE_RO, MODE_RU, MODE_SK, MODE_SL}
     private static PluralMode pluralMode = PluralMode.MODE_NOTONE; /* english default */
-    private static String[] fileChooserDialogStringKeys = new String[] {
+
+    /* Localization keys for file chooser (and color chooser). */
+    private static final String[] jFileChooserLocalizationKeys = new String[] {
         /* windows laf */
         "FileChooser.detailsViewActionLabelText",
         "FileChooser.detailsViewButtonAccessibleName",
@@ -91,8 +94,18 @@ public class I18n {
         //"FileChooser.saveButtonToolTipText",
         //"FileChooser.saveDialogTitleText",
         "FileChooser.updateButtonText",
-        "FileChooser.updateButtonToolTipText"
-        };
+        "FileChooser.updateButtonToolTipText",
+
+        /* color chooser */
+        "GTKColorChooserPanel.blueText",
+        "GTKColorChooserPanel.colorNameText",
+        "GTKColorChooserPanel.greenText",
+        "GTKColorChooserPanel.hueText",
+        "GTKColorChooserPanel.nameText",
+        "GTKColorChooserPanel.redText",
+        "GTKColorChooserPanel.saturationText",
+        "GTKColorChooserPanel.valueText"
+    };
     private static HashMap<String, String> strings = null;
     private static HashMap<String, String[]> pstrings = null;
     private static HashMap<String, PluralMode> languages = new HashMap<String, PluralMode>();
@@ -223,6 +236,7 @@ public class I18n {
         languages.put("en_GB", PluralMode.MODE_NOTONE);
         languages.put("es", PluralMode.MODE_NOTONE);
         languages.put("et", PluralMode.MODE_NOTONE);
+        languages.put("eu", PluralMode.MODE_NOTONE);
         languages.put("fi", PluralMode.MODE_NOTONE);
         languages.put("fr", PluralMode.MODE_GREATERONE);
         languages.put("gl", PluralMode.MODE_NOTONE);
@@ -423,17 +437,6 @@ public class I18n {
             }
             if (load(localeName)) {
                 Locale.setDefault(l);
-                
-                // localization for file chooser dialog
-                JFileChooser.setDefaultLocale(l);
-                for (String key : fileChooserDialogStringKeys) {
-                    String us = UIManager.getString(key, Locale.US);
-                    String loc = UIManager.getString(key, l);
-                    // only provide custom translation if it is not already localized by Java
-                    if (us != null && us.equals(loc)) {
-                        UIManager.put(key, tr(us));
-                    }
-                }
             } else {
                 if (!l.getLanguage().equals("en")) {
                     System.out.println(tr("Unable to find translation for the locale {0}. Reverting to {1}.",
@@ -446,11 +449,31 @@ public class I18n {
         }
     }
 
+    /**
+     * Localizations for file chooser dialog.
+     * For some locals (e.g. de, fr) translations are provided
+     * by Java, but for others (e.g. ru, uk) it is not.
+     */
+    public static void fixJFileChooser() {
+        Locale l = Locale.getDefault();
+
+        JFileChooser.setDefaultLocale(l);
+        JColorChooser.setDefaultLocale(l);
+        for (String key : jFileChooserLocalizationKeys) {
+            String us = UIManager.getString(key, Locale.US);
+            String loc = UIManager.getString(key, l);
+            // only provide custom translation if it is not already localized by Java
+            if (us != null && us.equals(loc)) {
+                UIManager.put(key, tr(us));
+            }
+        }
+    }
+
     private static int pluralEval(long n)
     {
         switch(pluralMode)
         {
-        case MODE_NOTONE: /* bg, da, de, el, en, en_GB, es, et, fi, gl, is, it, iw_IL, nb, nl, sv */
+        case MODE_NOTONE: /* bg, da, de, el, en, en_GB, es, et, eu, fi, gl, is, it, iw_IL, nb, nl, sv */
             return ((n != 1) ? 1 : 0);
         case MODE_NONE: /* ja, tr, zh_TW */
             return 0;
