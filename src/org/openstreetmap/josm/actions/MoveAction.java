@@ -26,37 +26,36 @@ import org.openstreetmap.josm.tools.Shortcut;
  */
 public class MoveAction extends JosmAction {
 
-    public enum Direction { UP, LEFT, RIGHT, DOWN }
+    public enum Direction {
+        UP   ("up",    "core:moveup",    KeyEvent.VK_UP),
+        LEFT ("down",  "core:movedown",  KeyEvent.VK_DOWN),
+        RIGHT("right", "core:moveleft",  KeyEvent.VK_LEFT),
+        DOWN ("down",  "core:moveright", KeyEvent.VK_RIGHT);
+
+        private String text;
+        private String shortString;
+        private int key;
+
+        private Direction(String text, String shortString, int key) {
+            this.text = text;
+            this.shortString = shortString;
+            this.key = key;
+        }
+        public String getText() {
+            return tr(text);
+        }
+        private String getLongText() {
+            return tr("Move objects {0}", getText());
+        }
+        private Shortcut getShortcut() {
+            return Shortcut.registerShortcut(shortString,getLongText(), key, Shortcut.GROUPS_ALT1+Shortcut.GROUP_DIRECT);
+        }
+    }
 
     private Direction myDirection;
 
-    // any better idea?
-    private static Object calltosupermustbefirststatementinconstructor(Direction dir, boolean text) {
-        Shortcut sc;
-        String directiontext;
-        if        (dir == Direction.UP)   {
-            directiontext = tr("up");
-            sc = Shortcut.registerShortcut("core:moveup",    tr("Move objects {0}", directiontext), KeyEvent.VK_UP,    Shortcut.GROUPS_ALT1+Shortcut.GROUP_DIRECT);
-        } else if (dir == Direction.DOWN)  {
-            directiontext = tr("down");
-            sc = Shortcut.registerShortcut("core:movedown",  tr("Move objects {0}", directiontext), KeyEvent.VK_DOWN,  Shortcut.GROUPS_ALT1+Shortcut.GROUP_DIRECT);
-        } else if (dir == Direction.LEFT)  {
-            directiontext = tr("left");
-            sc = Shortcut.registerShortcut("core:moveleft",  tr("Move objects {0}", directiontext), KeyEvent.VK_LEFT,  Shortcut.GROUPS_ALT1+Shortcut.GROUP_DIRECT);
-        } else { //dir == Direction.RIGHT) {
-            directiontext = tr("right");
-            sc = Shortcut.registerShortcut("core:moveright", tr("Move objects {0}", directiontext), KeyEvent.VK_RIGHT, Shortcut.GROUPS_ALT1+Shortcut.GROUP_DIRECT);
-        }
-        if (text)
-            return directiontext;
-        else
-            return sc;
-    }
-
     public MoveAction(Direction dir) {
-        super(tr("Move {0}", calltosupermustbefirststatementinconstructor(dir, true)), null,
-                tr("Moves Objects {0}", calltosupermustbefirststatementinconstructor(dir, true)),
-                (Shortcut)calltosupermustbefirststatementinconstructor(dir, false), true);
+        super(tr("Move {0}", dir.getText()), null, dir.getLongText(), dir.getShortcut(), true);
         myDirection = dir;
         putValue("help", ht("/Action/Move"));
     }
