@@ -6,12 +6,14 @@ import static org.openstreetmap.josm.tools.I18n.trn;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JLabel;
 
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.OsmPrimitiveType;
 import org.openstreetmap.josm.data.osm.PrimitiveData;
 
 public class AddPrimitivesCommand extends Command {
@@ -44,6 +46,12 @@ public class AddPrimitivesCommand extends Command {
             }
         }
 
+        for (Iterator<OsmPrimitive> it = createdPrimitives.iterator();it.hasNext();) {
+            OsmPrimitive p = it.next();
+            if (p.getType() == OsmPrimitiveType.NODE && !p.getReferrers().isEmpty()) {
+                it.remove();
+            }
+        }
         getLayer().data.setSelected(createdPrimitives);
         return true;
     }
@@ -56,7 +64,7 @@ public class AddPrimitivesCommand extends Command {
 
     @Override public JLabel getDescription() {
         return new JLabel(trn("Added {0} object", "Added {0} objects", data.size(), data.size()), null,
-                            JLabel.HORIZONTAL
+                JLabel.HORIZONTAL
         );
     }
 
