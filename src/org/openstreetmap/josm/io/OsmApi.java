@@ -145,7 +145,14 @@ public class OsmApi extends OsmConnection {
     public String getVersion() {
         return version;
     }
-
+    private void initDefault() {
+        System.out.println(tr("Communications with {0} established using unknown protocol. Trying to use version 0.6.",
+                serverUrl));
+        capabilities = new Capabilities();
+        version = "0.6";
+        osmWriter.setVersion(version);
+        initialized = true;
+    }
     /**
      * Initializes this component by negotiating a protocol version with the server.
      *
@@ -173,8 +180,9 @@ public class OsmApi extends OsmConnection {
             osmWriter.setVersion(version);
             initialized = true;
         } catch(IOException e) {
-            initialized = false;
-            throw new OsmApiInitializationException(e);
+            initDefault();
+            //initialized = false;
+            //throw new OsmApiInitializationException(e);
         } catch(SAXException e) {
             initialized = false;
             throw new OsmApiInitializationException(e);
@@ -184,8 +192,7 @@ public class OsmApi extends OsmConnection {
         } catch(OsmTransferCancelledException e){
             throw e;
         } catch(OsmTransferException e) {
-            initialized = false;
-            throw new OsmApiInitializationException(e);
+            initDefault();
         }
     }
 
