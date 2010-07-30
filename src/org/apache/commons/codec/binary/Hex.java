@@ -31,7 +31,7 @@ import org.apache.commons.codec.EncoderException;
  * 
  * @since 1.1
  * @author Apache Software Foundation
- * @version $Id: Hex.java 801729 2009-08-06 17:03:29Z ggregory $
+ * @version $Id: Hex.java 966309 2010-07-21 16:48:41Z bayard $
  */
 public class Hex implements BinaryEncoder, BinaryDecoder {
 
@@ -164,7 +164,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
     protected static int toDigit(char ch, int index) throws DecoderException {
         int digit = Character.digit(ch, 16);
         if (digit == -1) {
-            throw new DecoderException("Illegal hexadecimal charcter " + ch + " at index " + index);
+            throw new DecoderException("Illegal hexadecimal character " + ch + " at index " + index);
         }
         return digit;
     }

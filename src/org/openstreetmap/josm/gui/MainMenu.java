@@ -84,6 +84,7 @@ import org.openstreetmap.josm.actions.audio.AudioPrevAction;
 import org.openstreetmap.josm.actions.audio.AudioSlowerAction;
 import org.openstreetmap.josm.actions.search.SearchAction;
 import org.openstreetmap.josm.gui.layer.Layer;
+import org.openstreetmap.josm.gui.tagging.TaggingPresetSearchAction;
 import org.openstreetmap.josm.tools.Shortcut;
 /**
  * This is the JOSM main menu bar. It is overwritten to initialize itself and provide all menu
@@ -118,7 +119,7 @@ public class MainMenu extends JMenuBar {
     public final RedoAction redo = new RedoAction();
     public final JosmAction copy = new CopyAction();
     public final JosmAction paste = new PasteAction();
-    public final JosmAction pasteTags = new PasteTagsAction(copy);
+    public final JosmAction pasteTags = new PasteTagsAction();
     public final JosmAction duplicate = new DuplicateAction();
     public final JosmAction delete = new DeleteAction();
     public final JosmAction merge = new MergeLayerAction();
@@ -181,6 +182,8 @@ public class MainMenu extends JMenuBar {
     public final JosmAction moveLeftAction = new MoveAction(MoveAction.Direction.LEFT);
     public final JosmAction moveRightAction = new MoveAction(MoveAction.Direction.RIGHT);
     public final JumpToAction jumpToAct = new JumpToAction();
+
+    public final TaggingPresetSearchAction presetSearchAction = new TaggingPresetSearchAction();
 
 
     /**
@@ -287,6 +290,8 @@ public class MainMenu extends JMenuBar {
             fullscreen.setAccelerator(fullscreenToggleAction.getShortcut().getKeyStroke());
             fullscreenToggleAction.addButtonModel(fullscreen.getModel());
         }
+
+        add(presetsMenu, presetSearchAction);
 
         add(toolsMenu, splitWay);
         add(toolsMenu, combineWay);
