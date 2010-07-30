@@ -268,12 +268,7 @@ public class DataSetMerger {
                     break;
                 }
             }
-        } else if (target.isDeleted() != source.isDeleted()) {
-            // differences in deleted state have to be resolved manually. This can
-            // happen if one layer is merged onto another layer
-            //
-            conflicts.add(target,source);
-        } else if (! target.isModified() && source.isModified()) {
+        } else if (! target.isModified() && (source.isModified() || source.isDeleted())) {
             // target not modified. We can assume that source is the most recent version.
             // clone it into target. But check first, whether source is deleted. if so,
             // make sure that target is not referenced any more in myDataSet. If it is there
