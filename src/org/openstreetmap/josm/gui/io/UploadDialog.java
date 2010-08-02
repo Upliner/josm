@@ -6,6 +6,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -18,6 +19,8 @@ import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -33,6 +36,7 @@ import org.openstreetmap.josm.data.Preferences.PreferenceChangeEvent;
 import org.openstreetmap.josm.data.Preferences.PreferenceChangedListener;
 import org.openstreetmap.josm.data.osm.Changeset;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.HelpAwareOptionPane;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.help.ContextSensitiveHelpAction;
@@ -303,7 +307,7 @@ public class UploadDialog extends JDialog implements PropertyChangeListener, Pre
     }
 
     /**
-     * Replies the current value for the upload comment
+     * Returns the current value for the upload comment
      *
      * @return the current value for the upload comment
      */
@@ -312,9 +316,9 @@ public class UploadDialog extends JDialog implements PropertyChangeListener, Pre
     }
 
     /**
-     * Replies true, if the dialog was canceled
+     * Returns true if the dialog was canceled
      *
-     * @return true, if the dialog was canceled
+     * @return true if the dialog was canceled
      */
     public boolean isCanceled() {
         return canceled;
@@ -323,7 +327,7 @@ public class UploadDialog extends JDialog implements PropertyChangeListener, Pre
     /**
      * Sets whether the dialog was canceled
      *
-     * @param canceled true, if the dialog is canceled
+     * @param canceled true if the dialog is canceled
      */
     protected void setCanceled(boolean canceled) {
         this.canceled = canceled;
@@ -357,14 +361,38 @@ public class UploadDialog extends JDialog implements PropertyChangeListener, Pre
             putValue(SHORT_DESCRIPTION, tr("Upload the changed primitives"));
         }
 
-        protected void warnIllegalUploadComment() {
-            HelpAwareOptionPane.showOptionDialog(
-                    UploadDialog.this,
-                    tr("Please enter a comment for this upload changeset (min. 3 characters)"),
-                    tr("Illegal upload comment"),
-                    JOptionPane.ERROR_MESSAGE,
-                    ht("/Dialog/UploadDialog#IllegalUploadComment")
-            );
+        /**
+         * returns true if the user wants to revisit, false if they
+         * want to continue 
+         */
+        protected boolean warnUploadComment() {
+            ExtendedDialog dlg = new ExtendedDialog(UploadDialog.this,
+                tr("Please revise upload comment"),
+                new String[] {tr("Revise"), tr("Cancel"), tr("Continue as is")});
+            dlg.setContent("<html>" + 
+                    tr("Your upload comment is <i>empty</i>, or <i>very short</i>.<br /><br />" + 
+                       "This is technically allowed, but please consider that many users who are<br />" +
+                       "watching changes in their area depend on meaningful changeset comments<br />" +
+                       "to understand what is going on!<br /><br />" +
+                       "If you spend a minute now to explain your change, you will make life<br />" +
+                       "easier for many other mappers.") + 
+                    "</html>");
+            dlg.setButtonIcons(new Icon[] {
+                ImageProvider.get("ok"),
+                ImageProvider.get("cancel"),
+                ImageProvider.overlay(
+                    ImageProvider.get("upload"), 
+                    new ImageIcon(ImageProvider.get("warning-small").getImage().getScaledInstance(10 , 10, Image.SCALE_SMOOTH)),
+                    ImageProvider.OverlayPosition.SOUTHEAST)});
+            dlg.setToolTipTexts(new String[] {
+                tr("Return to the previous dialog to enter a more descriptive comment"),
+                tr("Cancel and return to the previous dialog"),
+                tr("Ignore this hint and upload anyway")});
+            dlg.setIcon(JOptionPane.WARNING_MESSAGE);
+            dlg.toggleEnable("upload_comment_is_empty_or_very_short");
+            dlg.setToggleCheckboxText(tr("Do not show this message again"));
+            dlg.setCancelButton(1, 2);
+            return dlg.showDialog().getValue() != 3;
         }
 
         protected void warnIllegalChunkSize() {
@@ -378,11 +406,13 @@ public class UploadDialog extends JDialog implements PropertyChangeListener, Pre
         }
 
         public void actionPerformed(ActionEvent e) {
-            if (getUploadComment().trim().length() < 3) {
-                warnIllegalUploadComment();
-                tpConfigPanels.setSelectedIndex(0);
-                pnlBasicUploadSettings.initEditingOfUploadComment();
-                return;
+            if (getUploadComment().trim().length() < 10) {
+                if (warnUploadComment())
+                {
+                    tpConfigPanels.setSelectedIndex(0);
+                    pnlBasicUploadSettings.initEditingOfUploadComment();
+                    return;
+                }
             }
             UploadStrategySpecification strategy = getUploadStrategySpecification();
             if (strategy.getStrategy().equals(UploadStrategy.CHUNKED_DATASET_STRATEGY)) {
