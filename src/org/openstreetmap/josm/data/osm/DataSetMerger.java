@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.openstreetmap.josm.command.DeleteCommand;
 import org.openstreetmap.josm.data.conflict.Conflict;
 import org.openstreetmap.josm.data.conflict.ConflictCollection;
 import org.openstreetmap.josm.tools.CheckParameterUtil;
@@ -41,7 +40,7 @@ public class DataSetMerger {
      * to relation members) after the first phase of merging
      */
     private final Set<PrimitiveId> objectsWithChildrenToMerge;
-    private final Set<PrimitiveId> objectsToDelete;
+    private final Set<OsmPrimitive> objectsToDelete;
 
     /**
      * constructor
@@ -59,7 +58,7 @@ public class DataSetMerger {
         conflicts = new ConflictCollection();
         mergedMap = new HashMap<PrimitiveId, PrimitiveId>();
         objectsWithChildrenToMerge = new HashSet<PrimitiveId>();
-        objectsToDelete = new HashSet<PrimitiveId>();
+        objectsToDelete = new HashSet<OsmPrimitive>();
     }
 
     /**
@@ -175,17 +174,12 @@ public class DataSetMerger {
         boolean flag;
         do {
             flag = false;
-            for (Iterator<PrimitiveId> it = objectsToDelete.iterator();it.hasNext();) {
-                PrimitiveId id = it.next();
-
-                OsmPrimitive source = sourceDataSet.getPrimitiveById(id);
+            for (Iterator<OsmPrimitive> it = objectsToDelete.iterator();it.hasNext();) {
+                OsmPrimitive target = it.next();
+                OsmPrimitive source = sourceDataSet.getPrimitiveById(target.getPrimitiveId());
                 if (source == null)
                     throw new RuntimeException(tr("Object of type {0} with id {1} was marked to be deleted, but it's missing in the source dataset",
-                            id.getType(), id.getUniqueId()));
-                OsmPrimitive target = targetDataSet.getPrimitiveById(id);
-                if (target == null)
-                    throw new RuntimeException(tr("Object of type {0} with id {1} was marked to be deleted, but it's missing in the target dataset",
-                            id.getType(), id.getUniqueId()));
+                            target.getType(), target.getUniqueId()));
 
                 List<OsmPrimitive> referrers = target.getReferrers();
                 if (referrers.isEmpty()) {
@@ -195,6 +189,8 @@ public class DataSetMerger {
                     flag = true;
                 } else {
                     for (OsmPrimitive referrer : referrers) {
+                        // If one of object referrers isn't going to be deleted,
+                        // add a conflict and don't delete the object
                         if (!objectsToDelete.contains(referrer)) {
                             conflicts.add(target, source);
                             it.remove();
@@ -206,15 +202,21 @@ public class DataSetMerger {
 
             }
         } while (flag);
+
         if (!objectsToDelete.isEmpty()) {
             // There are some more objects rest in the objectsToDelete set
             // This can be because of cross-referenced relations.
-            // We can delete them using DeleteCommand
-            List<OsmPrimitive> toDelete = new LinkedList<OsmPrimitive>();
-            for (PrimitiveId id : objectsToDelete) {
-                toDelete.add(targetDataSet.getPrimitiveById(id));
+            for (OsmPrimitive osm: objectsToDelete) {
+                if (osm instanceof Way) {
+                    ((Way) osm).setNodes(null);
+                } else if (osm instanceof Relation) {
+                    ((Relation) osm).setMembers(null);
+                }
             }
-            new DeleteCommand(toDelete).executeCommand();
+            for (OsmPrimitive osm: objectsToDelete) {
+                osm.setDeleted(true);
+                osm.mergeFrom(sourceDataSet.getPrimitiveById(osm.getPrimitiveId()));
+            }
         }
     }
 
@@ -327,7 +329,7 @@ public class DataSetMerger {
             // target not modified. We can assume that source is the most recent version,
             // so mark it to be deleted.
             //
-            objectsToDelete.add(source.getPrimitiveId());
+            objectsToDelete.add(target);
         } else if (! target.isModified() && source.isModified()) {
             // target not modified. We can assume that source is the most recent version.
             // clone it into target.
