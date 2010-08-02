@@ -6,11 +6,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openstreetmap.josm.command.DeleteCommand;
 import org.openstreetmap.josm.data.conflict.Conflict;
 import org.openstreetmap.josm.data.conflict.ConflictCollection;
 import org.openstreetmap.josm.tools.CheckParameterUtil;
@@ -39,7 +41,7 @@ public class DataSetMerger {
      * to relation members) after the first phase of merging
      */
     private final Set<PrimitiveId> objectsWithChildrenToMerge;
-    private final Set<OsmPrimitive> deletedObjectsToUnlink;
+    private final Set<PrimitiveId> objectsToDelete;
 
     /**
      * constructor
@@ -57,7 +59,7 @@ public class DataSetMerger {
         conflicts = new ConflictCollection();
         mergedMap = new HashMap<PrimitiveId, PrimitiveId>();
         objectsWithChildrenToMerge = new HashSet<PrimitiveId>();
-        deletedObjectsToUnlink = new HashSet<OsmPrimitive>();
+        objectsToDelete = new HashSet<PrimitiveId>();
     }
 
     /**
@@ -161,11 +163,58 @@ public class DataSetMerger {
                 mergeRelationMembers(r);
             }
         }
-        for (OsmPrimitive source: deletedObjectsToUnlink) {
-            OsmPrimitive target = getMergeTarget(source);
-            if (target == null)
-                throw new RuntimeException(tr("Missing merge target for object with id {0}", source.getUniqueId()));
-            targetDataSet.unlinkReferencesToPrimitive(target);
+
+        deleteMarkedObjects();
+    }
+
+    /**
+     * Deleted objects in objectsToDelete set and create conflicts for objects that cannot
+     * be deleted because they're referenced in the target dataset.
+     */
+    protected void deleteMarkedObjects() {
+        boolean flag;
+        do {
+            flag = false;
+            for (Iterator<PrimitiveId> it = objectsToDelete.iterator();it.hasNext();) {
+                PrimitiveId id = it.next();
+
+                OsmPrimitive source = sourceDataSet.getPrimitiveById(id);
+                if (source == null)
+                    throw new RuntimeException(tr("Object of type {0} with id {1} was marked to be deleted, but it's missing in the source dataset",
+                            id.getType(), id.getUniqueId()));
+                OsmPrimitive target = targetDataSet.getPrimitiveById(id);
+                if (target == null)
+                    throw new RuntimeException(tr("Object of type {0} with id {1} was marked to be deleted, but it's missing in the target dataset",
+                            id.getType(), id.getUniqueId()));
+
+                List<OsmPrimitive> referrers = target.getReferrers();
+                if (referrers.isEmpty()) {
+                    target.setDeleted(true);
+                    target.mergeFrom(source);
+                    it.remove();
+                    flag = true;
+                } else {
+                    for (OsmPrimitive referrer : referrers) {
+                        if (!objectsToDelete.contains(referrer)) {
+                            conflicts.add(target, source);
+                            it.remove();
+                            flag = true;
+                            break;
+                        }
+                    }
+                }
+
+            }
+        } while (flag);
+        if (!objectsToDelete.isEmpty()) {
+            // There are some more objects rest in the objectsToDelete set
+            // This can be because of cross-referenced relations.
+            // We can delete them using DeleteCommand
+            List<OsmPrimitive> toDelete = new LinkedList<OsmPrimitive>();
+            for (PrimitiveId id : objectsToDelete) {
+                toDelete.add(targetDataSet.getPrimitiveById(id));
+            }
+            new DeleteCommand(toDelete).executeCommand();
         }
     }
 
@@ -260,7 +309,7 @@ public class DataSetMerger {
             // Same version, but different "visible" attribute. It indicates a serious problem in datasets.
             // For example, datasets can be fetched from different OSM servers or badly hand-modified.
             // We shouldn't merge that datasets.
-            throw new DataIntegrityProblemException(tr("Conflict in 'visible' attribute for primitive of type {0} with id {1}",
+            throw new DataIntegrityProblemException(tr("Conflict in 'visible' attribute for object of type {0} with id {1}",
                     target.getType(), target.getId()));
         else if (target.isDeleted() && ! source.isDeleted() && target.getVersion() == source.getVersion()) {
             // same version, but target is deleted. Assume target takes precedence
@@ -276,13 +325,9 @@ public class DataSetMerger {
             }
         } else if (! target.isModified() && source.isDeleted()) {
             // target not modified. We can assume that source is the most recent version,
-            // so delete it. But first make sure that target is not referenced any more in myDataSet.
-            // If it is there is a conflict.
-            if (!target.getReferrers().isEmpty()) {
-                conflicts.add(target, source);
-            } else {
-                target.mergeFrom(source);
-            }
+            // so mark it to be deleted.
+            //
+            objectsToDelete.add(source.getPrimitiveId());
         } else if (! target.isModified() && source.isModified()) {
             // target not modified. We can assume that source is the most recent version.
             // clone it into target.
