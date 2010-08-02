@@ -17,7 +17,6 @@ public class TaggingPresetSearchAction extends JosmAction {
                 Shortcut.registerShortcut("preset:search", tr("Search presets"), KeyEvent.VK_F3, Shortcut.GROUP_DIRECT), true);
     }
 
-    @Override
     public void actionPerformed(ActionEvent e) {
 
         if (!Main.main.hasEditLayer())

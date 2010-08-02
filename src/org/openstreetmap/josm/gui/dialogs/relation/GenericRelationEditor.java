@@ -1467,7 +1467,6 @@ public class GenericRelationEditor extends RelationEditor  {
             registerCopyPasteAction(this, "PASTE_MEMBERS", Shortcut.getPasteKeyStroke());
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             try {
                 List<PrimitiveData> primitives = Main.pasteBuffer.getDirectlyAdded();
@@ -1510,7 +1509,6 @@ public class GenericRelationEditor extends RelationEditor  {
             registerCopyPasteAction(this, "COPY_MEMBERS", Shortcut.getCopyKeyStroke());
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             Set<OsmPrimitive> primitives = new HashSet<OsmPrimitive>();
             for (RelationMember rm: memberTableModel.getSelectedMembers()) {
