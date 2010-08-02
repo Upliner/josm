@@ -256,7 +256,13 @@ public class DataSetMerger {
             // target and source are incomplete. Doesn't matter which one to
             // take. We take target.
             //
-        } else if (target.isDeleted() && ! source.isDeleted() && target.getVersion() == source.getVersion()) {
+        } else if (target.isVisible() != source.isVisible() && target.getVersion() == source.getVersion())
+            // Same version, but different "visible" attribute. It indicates a serious problem in datasets.
+            // For example, datasets can be fetched from different OSM servers or badly hand-modified.
+            // We shouldn't merge that datasets.
+            throw new DataIntegrityProblemException(tr("Conflict in 'visible' attribute for primitive of type {0} with id {1}",
+                    target.getType(), target.getId()));
+        else if (target.isDeleted() && ! source.isDeleted() && target.getVersion() == source.getVersion()) {
             // same version, but target is deleted. Assume target takes precedence
             // otherwise too many conflicts when refreshing from the server
             // but, if source has a referrer that is not in the target dataset there is a conflict
@@ -268,19 +274,20 @@ public class DataSetMerger {
                     break;
                 }
             }
-        } else if (! target.isModified() && (source.isModified() || source.isDeleted())) {
-            // target not modified. We can assume that source is the most recent version.
-            // clone it into target. But check first, whether source is deleted. if so,
-            // make sure that target is not referenced any more in myDataSet. If it is there
-            // is a conflict
-            if (source.isDeleted()) {
-                if (!target.getReferrers().isEmpty()) {
-                    conflicts.add(target, source);
-                }
+        } else if (! target.isModified() && source.isDeleted()) {
+            // target not modified. We can assume that source is the most recent version,
+            // so delete it. But first make sure that target is not referenced any more in myDataSet.
+            // If it is there is a conflict.
+            if (!target.getReferrers().isEmpty()) {
+                conflicts.add(target, source);
             } else {
                 target.mergeFrom(source);
-                objectsWithChildrenToMerge.add(source.getPrimitiveId());
             }
+        } else if (! target.isModified() && source.isModified()) {
+            // target not modified. We can assume that source is the most recent version.
+            // clone it into target.
+            target.mergeFrom(source);
+            objectsWithChildrenToMerge.add(source.getPrimitiveId());
         } else if (! target.isModified() && !source.isModified() && target.getVersion() == source.getVersion()) {
             // both not modified. Merge nevertheless.
             // This helps when updating "empty" relations, see #4295
@@ -297,6 +304,11 @@ public class DataSetMerger {
             if (target.hasEqualSemanticAttributes(source)) {
                 target.setModified(false);
             }
+        } else if (source.isDeleted() != target.isDeleted()) {
+            // target is modified and deleted state differs.
+            // this have to be resolved manually.
+            //
+            conflicts.add(target,source);
         } else if (! target.hasEqualSemanticAttributes(source)) {
             // target is modified and is not semantically equal with source. Can't automatically
             // resolve the differences
