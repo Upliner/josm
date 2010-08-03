@@ -967,7 +967,7 @@ public class DataSet implements Cloneable {
         boolean changed = false;
         while (it.hasNext()) {
             OsmPrimitive primitive = it.next();
-            if (primitive.isDeleted()) {
+            if (primitive.isDeleted() && !primitive.isVisible()) {
                 selectedPrimitives.remove(primitive);
                 allPrimitives.remove(primitive);
                 primitive.setDataset(null);
