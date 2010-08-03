@@ -304,7 +304,6 @@ public class TaggingPresetSearchDialog extends ExtendedDialog {
      * @param text
      */
     private void filterPresets(String text) {
-        //TODO search also in keys/values
         //TODO Favorites
         text = text.toLowerCase();
 
