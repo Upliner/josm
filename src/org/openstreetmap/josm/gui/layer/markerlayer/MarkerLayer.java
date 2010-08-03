@@ -387,7 +387,6 @@ public class MarkerLayer extends Layer {
         }
 
 
-        @Override
         public Component createMenuComponent() {
             JCheckBoxMenuItem showMarkerTextItem = new JCheckBoxMenuItem(this);
             showMarkerTextItem.setState(layer.isTextOrIconShown());
@@ -395,7 +394,6 @@ public class MarkerLayer extends Layer {
         }
 
 
-        @Override
         public boolean supportLayers(List<Layer> layers) {
             return layers.size() == 1 && layers.get(0) instanceof MarkerLayer;
         }
@@ -408,7 +406,6 @@ public class MarkerLayer extends Layer {
             putValue("help", "Action/LayerCustomizeColor");
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             JColorChooser c = new JColorChooser(getColor(getName()));
             Object[] options = new Object[]{tr("OK"), tr("Cancel"), tr("Default")};
@@ -443,7 +440,6 @@ public class MarkerLayer extends Layer {
             putValue("help", "Action/SynchronizeAudio");
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             if (! AudioPlayer.paused()) {
                 JOptionPane.showMessageDialog(
@@ -480,7 +476,6 @@ public class MarkerLayer extends Layer {
             putValue("help", "Action/MakeAudioMarkerAtPlayHead");
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             if (! AudioPlayer.paused()) {
                 JOptionPane.showMessageDialog(

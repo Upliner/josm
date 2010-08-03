@@ -11,7 +11,7 @@ public class MultiMap<A, B> extends HashMap<A, LinkedHashSet<B>> {
     /**
      * Map a key to a value. Can be called multiple times with the same key, but different value.
      */
-    public void put(A key, B value) {
+    public void putValue(A key, B value) {
         LinkedHashSet<B> vals = get(key);
         if (vals == null) {
             vals = new LinkedHashSet<B>();

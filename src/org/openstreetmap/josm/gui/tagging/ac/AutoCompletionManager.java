@@ -130,7 +130,7 @@ public class AutoCompletionManager implements DataSetListener {
     protected void cachePrimitiveTags(OsmPrimitive primitive) {
         for (String key: primitive.keySet()) {
             String value = primitive.get(key);
-            tagCache.put(key, value);
+            tagCache.putValue(key, value);
         }
     }
 
@@ -158,22 +158,22 @@ public class AutoCompletionManager implements DataSetListener {
                     if (ch.key == null) {
                         continue;
                     }
-                    presetTagCache.put(ch.key, OsmUtils.falseval);
-                    presetTagCache.put(ch.key, OsmUtils.trueval);
+                    presetTagCache.putValue(ch.key, OsmUtils.falseval);
+                    presetTagCache.putValue(ch.key, OsmUtils.trueval);
                 } else if (item instanceof TaggingPreset.Combo) {
                     TaggingPreset.Combo co = (TaggingPreset.Combo) item;
                     if (co.key == null || co.values == null) {
                         continue;
                     }
                     for (String value : co.values.split(",")) {
-                        presetTagCache.put(co.key, value);
+                        presetTagCache.putValue(co.key, value);
                     }
                 } else if (item instanceof TaggingPreset.Key) {
                     TaggingPreset.Key ky = (TaggingPreset.Key) item;
                     if (ky.key == null || ky.value == null) {
                         continue;
                     }
-                    presetTagCache.put(ky.key, ky.value);
+                    presetTagCache.putValue(ky.key, ky.value);
                 } else if (item instanceof TaggingPreset.Text) {
                     TaggingPreset.Text tt = (TaggingPreset.Text) item;
                     if (tt.key == null) {
@@ -181,7 +181,7 @@ public class AutoCompletionManager implements DataSetListener {
                     }
                     presetTagCache.putVoid(tt.key);
                     if (tt.default_ != null && !tt.default_.equals("")) {
-                        presetTagCache.put(tt.key, tt.default_);
+                        presetTagCache.putValue(tt.key, tt.default_);
                     }
                 } else if (item instanceof TaggingPreset.Roles) {
                     TaggingPreset.Roles r = (TaggingPreset.Roles) item;

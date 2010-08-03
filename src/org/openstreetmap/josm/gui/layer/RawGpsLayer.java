@@ -236,7 +236,6 @@ public class RawGpsLayer extends Layer implements PreferenceChangedListener {
             super(tr("Customize line drawing"), ImageProvider.get("mapmode/addsegment"));
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             JRadioButton[] r = new JRadioButton[3];
             r[0] = new JRadioButton(tr("Use global settings."));
@@ -278,7 +277,6 @@ public class RawGpsLayer extends Layer implements PreferenceChangedListener {
             super(tr("Customize Color"), ImageProvider.get("colorchooser"));
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             JColorChooser c = new JColorChooser(Main.pref.getColor(marktr("gps point"), "layer "+getName(), Color.gray));
             Object[] options = new Object[]{tr("OK"), tr("Cancel"), tr("Default")};

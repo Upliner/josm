@@ -46,13 +46,13 @@ import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.help.HelpUtil;
 import org.openstreetmap.josm.gui.io.SaveLayersDialog;
 import org.openstreetmap.josm.gui.layer.Layer;
-import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.Layer.LayerAction;
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 import org.openstreetmap.josm.tools.CheckParameterUtil;
 import org.openstreetmap.josm.tools.ImageProvider;
-import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.tools.ImageProvider.OverlayPosition;
+import org.openstreetmap.josm.tools.Shortcut;
 
 /**
  * This is a toggle dialog which displays the list of layers. Actions allow to
@@ -320,12 +320,10 @@ public class LayerListDialog extends ToggleDialog {
             setEnabled(! getModel().getSelectedLayers().isEmpty());
         }
 
-        @Override
         public Component createMenuComponent() {
             return new JMenuItem(this);
         }
 
-        @Override
         public boolean supportLayers(List<Layer> layers) {
             return true;
         }
@@ -389,12 +387,10 @@ public class LayerListDialog extends ToggleDialog {
             }
         }
 
-        @Override
         public Component createMenuComponent() {
             return new JMenuItem(this);
         }
 
-        @Override
         public boolean supportLayers(List<Layer> layers) {
             return true;
         }

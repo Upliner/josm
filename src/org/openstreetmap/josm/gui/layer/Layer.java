@@ -54,15 +54,12 @@ abstract public class Layer implements Destroyable, MapViewPaintable {
      */
     public static class SeparatorLayerAction extends AbstractAction implements LayerAction {
         public static final SeparatorLayerAction INSTANCE = new SeparatorLayerAction();
-        @Override
         public void actionPerformed(ActionEvent e) {
             throw new UnsupportedOperationException();
         }
-        @Override
         public Component createMenuComponent() {
             return new JSeparator();
         }
-        @Override
         public boolean supportLayers(List<Layer> layers) {
             return false;
         }

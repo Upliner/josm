@@ -1208,7 +1208,6 @@ public class GpxLayer extends Layer {
             super(tr("Customize line drawing"), ImageProvider.get("mapmode/addsegment"));
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             JRadioButton[] r = new JRadioButton[3];
             r[0] = new JRadioButton(tr("Use global settings."));
@@ -1251,7 +1250,6 @@ public class GpxLayer extends Layer {
             putValue("help", "Action/LayerCustomizeColor");
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             JColorChooser c = new JColorChooser(getColor(getName()));
             Object[] options = new Object[] { tr("OK"), tr("Cancel"), tr("Default") };
@@ -1286,7 +1284,6 @@ public class GpxLayer extends Layer {
             putValue("help", "Action/MarkersFromNamedPoints");
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             GpxData namedTrackPoints = new GpxData();
             for (GpxTrack track : data.tracks) {
@@ -1328,7 +1325,6 @@ public class GpxLayer extends Layer {
             );
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             if (GpxLayer.this.data.fromServer) {
                 warnCantImportIntoServerLayer(GpxLayer.this);
@@ -1427,7 +1423,6 @@ public class GpxLayer extends Layer {
             }
         }
 
-        @Override
         public void actionPerformed(ActionEvent e) {
 
             if (GpxLayer.this.data.fromServer) {

@@ -220,7 +220,7 @@ public class OpenFileAction extends DiskAccessAction {
                 FILES: for (File f : files) {
                     for (FileImporter importer : ExtensionFileFilter.importers) {
                         if (importer.acceptFile(f)) {
-                            map.put(importer, f);
+                            map.putValue(importer, f);
                             filesWithKnownImporter.add(f);
                             continue FILES;
                         }
