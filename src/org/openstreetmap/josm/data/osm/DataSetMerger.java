@@ -326,13 +326,14 @@ public class DataSetMerger {
                 }
             }
         } else if (! target.isModified() && source.isDeleted()) {
-            // target not modified. We can assume that source is the most recent version,
+            // target not modified, source is deleted. We can assume that source is the most recent version,
             // so mark it to be deleted.
             //
             objectsToDelete.add(target);
         } else if (! target.isModified() && source.isModified()) {
-            // target not modified. We can assume that source is the most recent version.
+            // target not modified, source is modified. We can assume that source is the most recent version.
             // clone it into target.
+            //
             target.mergeFrom(source);
             objectsWithChildrenToMerge.add(source.getPrimitiveId());
         } else if (! target.isModified() && !source.isModified() && target.getVersion() == source.getVersion()) {
