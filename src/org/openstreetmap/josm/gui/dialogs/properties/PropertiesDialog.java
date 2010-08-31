@@ -7,6 +7,7 @@ import static org.openstreetmap.josm.tools.I18n.trn;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagLayout;
@@ -150,7 +151,7 @@ public class PropertiesDialog extends ToggleDialog implements SelectionChangedLi
     // hook for roadsigns plugin to display a small
     // button in the upper right corner of this dialog
     public static JPanel pluginHook = new JPanel();
-    
+
     private final Map<String, Map<String, Integer>> valueCount = new TreeMap<String, Map<String, Integer>>();
 
     Comparator<AutoCompletionListItem> defaultACItemComparator = new Comparator<AutoCompletionListItem>() {
@@ -178,7 +179,7 @@ public class PropertiesDialog extends ToggleDialog implements SelectionChangedLi
         DatasetEventManager.getInstance().removeDatasetListener(dataChangedAdapter);
         SelectionEventManager.getInstance().removeSelectionListener(this);
         MapView.removeEditLayerChangeListener(this);
-        Main.unregisterActionShortcut(addActionShortcut);
+        Main.unregisterActionShortcut(addAction, addActionShortcut);
     }
 
     /**
@@ -259,6 +260,7 @@ public class PropertiesDialog extends ToggleDialog implements SelectionChangedLi
             }
         };
         final JDialog dlg = optionPane.createDialog(Main.parent, tr("Change values?"));
+        dlg.setModalityType(ModalityType.DOCUMENT_MODAL);
 
         values.getEditor().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -400,6 +402,7 @@ public class PropertiesDialog extends ToggleDialog implements SelectionChangedLi
             }
         };
         JDialog dialog = pane.createDialog(Main.parent, tr("Change values?"));
+        dialog.setModalityType(ModalityType.DOCUMENT_MODAL);
         dialog.setVisible(true);
 
         if (!Integer.valueOf(JOptionPane.OK_OPTION).equals(pane.getValue()))
@@ -1100,9 +1103,11 @@ public class PropertiesDialog extends ToggleDialog implements SelectionChangedLi
             if(select) {
                 putValue(NAME, tr("Select relation"));
                 putValue(SHORT_DESCRIPTION, tr("Select relation in main selection."));
+                putValue(SMALL_ICON, ImageProvider.get("dialogs", "select"));
             } else {
                 putValue(NAME, tr("Select in relation list"));
                 putValue(SHORT_DESCRIPTION, tr("Select relation in relation list."));
+                putValue(SMALL_ICON, ImageProvider.get("dialogs", "relationlist"));
             }
         }
 

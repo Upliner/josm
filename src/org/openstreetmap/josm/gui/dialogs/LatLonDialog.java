@@ -1,7 +1,6 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.gui.dialogs;
 
-import static org.openstreetmap.josm.gui.help.HelpUtil.ht;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.awt.BorderLayout;
@@ -118,7 +117,7 @@ public class LatLonDialog extends JDialog {
     }
 
     public LatLonDialog(Component parent, String title, String help) {
-        super(JOptionPane.getFrameForComponent(parent), true /* modal */);
+        super(JOptionPane.getFrameForComponent(parent), ModalityType.DOCUMENT_MODAL);
         this.help = help;
         setTitle(title);
         build();

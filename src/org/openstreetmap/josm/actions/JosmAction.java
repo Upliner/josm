@@ -65,6 +65,19 @@ abstract public class JosmAction extends AbstractAction implements Destroyable {
      * @param register register this action for the toolbar preferences?
      */
     public JosmAction(String name, String iconName, String tooltip, Shortcut shortcut, boolean register) {
+        this(name, iconName, tooltip, shortcut, register, true);
+    }
+
+    /**
+     * Even newer super for all actions. Use if you don't want to install layer changed and selection changed adapters
+     * @param name
+     * @param iconName
+     * @param tooltip
+     * @param shortcut
+     * @param register
+     * @param installAdapters
+     */
+    public JosmAction(String name, String iconName, String tooltip, Shortcut shortcut, boolean register, boolean installAdapters) {
         super(name, iconName == null ? null : ImageProvider.get(iconName));
         setHelpId();
         sc = shortcut;
@@ -76,7 +89,9 @@ abstract public class JosmAction extends AbstractAction implements Destroyable {
         if (register) {
             Main.toolbar.register(this);
         }
-        installAdapters();
+        if (installAdapters) {
+            installAdapters();
+        }
     }
 
     public JosmAction() {
@@ -92,7 +107,7 @@ abstract public class JosmAction extends AbstractAction implements Destroyable {
 
     public void destroy() {
         if (sc != null) {
-            Main.unregisterActionShortcut(sc);
+            Main.unregisterActionShortcut(this);
         }
         MapView.removeLayerChangeListener(layerChangeAdapter);
         DataSet.removeSelectionListener(selectionChangeAdapter);

@@ -99,7 +99,7 @@ Build-Date: ${build.tstamp}
 
 			<!-- All jar files necessary to run only JOSM (no tests) -->
 			<zipfileset src="lib/metadata-extractor-2.3.1-nosun.jar" />
-			<zipfileset src="lib/signpost-core-1.1.jar" />
+			<zipfileset src="lib/signpost-core-1.2.1.1.jar" />
 		</jar>
 	</target>
 
@@ -119,7 +119,7 @@ Build-Date: ${build.tstamp}
 
 	<target name="compile" depends="init">
 		<javac srcdir="src" classpathref="classpath" destdir="build"
-				target="1.5" source="1.5" debug="on" encoding="UTF-8">
+				target="1.6" source="1.6" debug="on" encoding="UTF-8">
 			<compilerarg value="-Xlint:deprecation"/>
 			<compilerarg value="-Xlint:unchecked"/>
 		</javac>
@@ -156,12 +156,12 @@ Build-Date: ${build.tstamp}
 
 	<target name="test-compile" depends="test-init">
 		<javac srcdir="${src.dir}:${test.dir}/unit" classpathref="test.classpath" destdir="${test.dir}/${build.dir}"
-				target="1.5" source="1.5" debug="on" encoding="UTF-8">
+				target="1.6" source="1.6" debug="on" encoding="UTF-8">
 			<compilerarg value="-Xlint:deprecation"/>
 			<compilerarg value="-Xlint:unchecked"/>
 		</javac>
 		<javac srcdir="${src.dir}:${test.dir}/functional" classpathref="test.classpath" destdir="${test.dir}/${build.dir}"
-						target="1.5" source="1.5" debug="on" encoding="UTF-8">
+						target="1.6" source="1.6" debug="on" encoding="UTF-8">
 			<compilerarg value="-Xlint:deprecation"/>
 			<compilerarg value="-Xlint:unchecked"/>
 		</javac>
@@ -194,6 +194,8 @@ Build-Date: ${build.tstamp}
 
 	 	-dontoptimize
 	 	-dontobfuscate
+	 	
+	 	-dontskipnonpubliclibraryclasses
 
 	 	-keepclasseswithmembers public class org.openstreetmap.josm.gui.MainApplication {
 	 	    public static void main(java.lang.String[]);

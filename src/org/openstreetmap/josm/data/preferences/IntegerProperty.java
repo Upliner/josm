@@ -14,11 +14,35 @@ public class IntegerProperty {
     }
 
     public int get() {
-        return Main.pref.getInteger(key, defaultValue);
+        return Main.pref.getInteger(getKey(), getDefaultValue());
     }
 
     public boolean put(int value) {
-        return Main.pref.putInteger(key, value);
+        return Main.pref.putInteger(getKey(), value);
+    }
+
+    /**
+     * parses and saves an integer value
+     * @param value the value to be parsed
+     * @return true - preference value has changed
+     *         false - parsing failed or preference value has not changed
+     */
+    public boolean parseAndPut(String value) {
+        Integer intVal;
+        try {
+            intVal = Integer.parseInt(value);
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+        return put(intVal);
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public int getDefaultValue() {
+        return defaultValue;
     }
 
 }

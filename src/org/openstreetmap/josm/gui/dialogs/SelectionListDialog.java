@@ -202,6 +202,7 @@ public class SelectionListDialog extends ToggleDialog  {
         if (Main.map.mapView.getEditLayer() != null) {
             model.setJOSMSelection(Main.map.mapView.getEditLayer().data.getSelected());
         }
+        actSearch.updateEnabledState();
     }
 
     @Override
@@ -218,6 +219,10 @@ public class SelectionListDialog extends ToggleDialog  {
         parentButton.setLayout(new BorderLayout());
         parentButton.add(arrowButton, BorderLayout.EAST);
         return arrowButton;
+    }
+
+    public void clearSelectionHistory() {
+        model.clearSelectionHistory();
     }
 
     /**
@@ -541,6 +546,10 @@ public class SelectionListDialog extends ToggleDialog  {
          */
         public List<Collection<? extends OsmPrimitive>> getSelectionHistory() {
             return history;
+        }
+
+        public void clearSelectionHistory() {
+            history.clear();
         }
 
         public Object getElementAt(int index) {

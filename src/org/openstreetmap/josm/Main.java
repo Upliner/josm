@@ -35,6 +35,7 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 
+import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.actions.OpenFileAction;
 import org.openstreetmap.josm.actions.downloadtasks.DownloadGpsTask;
 import org.openstreetmap.josm.actions.downloadtasks.DownloadOsmTask;
@@ -312,6 +313,16 @@ abstract public class Main {
         contentPanePrivate.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).remove(shortcut.getKeyStroke());
     }
 
+    public static void unregisterActionShortcut(JosmAction action) {
+        unregisterActionShortcut(action, action.getShortcut());
+    }
+
+    public static void unregisterActionShortcut(Action action, Shortcut shortcut) {
+        contentPanePrivate.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).remove(shortcut.getKeyStroke());
+        contentPanePrivate.getActionMap().remove(action);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////
     //  Implementation part
     ///////////////////////////////////////////////////////////////////////////
@@ -360,7 +371,7 @@ abstract public class Main {
         UIManager.put("OptionPane.cancelIcon", ImageProvider.get("cancel"));
         UIManager.put("OptionPane.noIcon", UIManager.get("OptionPane.cancelIcon"));
 
-        I18n.fixJFileChooser();
+        I18n.translateJavaInternalMessages();
 
         // init default coordinate format
         //
@@ -642,7 +653,7 @@ abstract public class Main {
 
             if (map  != null) {
                 newToggleDlgWidth = Integer.toString(map.getToggleDlgWidth());
-                if (newToggleDlgWidth.equals(Integer.toString(map.DEF_TOGGLE_DLG_WIDTH))) {
+                if (newToggleDlgWidth.equals(Integer.toString(MapFrame.DEF_TOGGLE_DLG_WIDTH))) {
                     newToggleDlgWidth = "";
                 }
             }

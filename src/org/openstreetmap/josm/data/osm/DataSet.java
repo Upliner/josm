@@ -243,37 +243,19 @@ public class DataSet implements Cloneable {
                         tr("Unable to add primitive {0} to the dataset because it is already included", primitive.toString()));
 
             primitive.updatePosition(); // Set cached bbox for way and relation (required for reindexWay and reinexRelation to work properly)
+            boolean success = false;
             if (primitive instanceof Node) {
-                nodes.add((Node) primitive);
+                success = nodes.add((Node) primitive);
             } else if (primitive instanceof Way) {
-                ways.add((Way) primitive);
+                success = ways.add((Way) primitive);
             } else if (primitive instanceof Relation) {
-                relations.add((Relation) primitive);
+                success = relations.add((Relation) primitive);
             }
+            if (!success)
+                throw new RuntimeException("failed to add primitive: "+primitive);
             allPrimitives.add(primitive);
             primitive.setDataset(this);
             firePrimitivesAdded(Collections.singletonList(primitive), false);
-        } finally {
-            endUpdate();
-        }
-    }
-
-    public OsmPrimitive addPrimitive(PrimitiveData data) {
-        beginUpdate();
-        try {
-            OsmPrimitive result;
-            if (data instanceof NodeData) {
-                result = new Node();
-            } else if (data instanceof WayData) {
-                result = new Way();
-            } else if (data instanceof RelationData) {
-                result = new Relation();
-            } else
-                throw new AssertionError();
-            result.setDataset(this);
-            result.load(data);
-            addPrimitive(result);
-            return result;
         } finally {
             endUpdate();
         }
@@ -294,13 +276,16 @@ public class DataSet implements Cloneable {
             OsmPrimitive primitive = getPrimitiveByIdChecked(primitiveId);
             if (primitive == null)
                 return;
+            boolean success = false;
             if (primitive instanceof Node) {
-                nodes.remove(primitive);
+                success = nodes.remove(primitive);
             } else if (primitive instanceof Way) {
-                ways.remove(primitive);
+                success = ways.remove(primitive);
             } else if (primitive instanceof Relation) {
-                relations.remove(primitive);
+                success = relations.remove(primitive);
             }
+            if (!success)
+                throw new RuntimeException("failed to remove primitive: "+primitive);
             synchronized (selectionLock) {
                 selectedPrimitives.remove(primitive);
                 selectionSnapshot = null;
@@ -340,11 +325,9 @@ public class DataSet implements Cloneable {
      *
      */
     public void fireSelectionChanged(){
-        synchronized (selListeners) {
-            Collection<? extends OsmPrimitive> currentSelection = getSelected();
-            for (SelectionChangedListener l : selListeners) {
-                l.selectionChanged(currentSelection);
-            }
+        Collection<? extends OsmPrimitive> currentSelection = getSelected();
+        for (SelectionChangedListener l : selListeners) {
+            l.selectionChanged(currentSelection);
         }
     }
 
@@ -397,6 +380,13 @@ public class DataSet implements Cloneable {
         return new DatasetCollection<Relation>(getSelected(), OsmPrimitive.relationPredicate);
     }
 
+    /**
+     * @return whether the selection is empty or not
+     */
+    public boolean selectionEmpty() {
+        return selectedPrimitives.isEmpty();
+    }
+
     public boolean isSelected(OsmPrimitive osm) {
         return selectedPrimitives.contains(osm);
     }
@@ -437,17 +427,18 @@ public class DataSet implements Cloneable {
      * @param fireSelectionChangeEvent true, if the selection change listeners are to be notified; false, otherwise
      */
     public void setSelected(Collection<? extends PrimitiveId> selection, boolean fireSelectionChangeEvent) {
-        boolean wasEmpty;
+        boolean changed;
         synchronized (selectionLock) {
-            wasEmpty = selectedPrimitives.isEmpty();
+            boolean wasEmpty = selectedPrimitives.isEmpty();
             selectedPrimitives = new LinkedHashSet<OsmPrimitive>();
-            addSelected(selection, fireSelectionChangeEvent);
-            if (!wasEmpty && selectedPrimitives.isEmpty()) {
+            changed = addSelected(selection, false)
+            || (!wasEmpty && selectedPrimitives.isEmpty());
+            if (changed) {
                 selectionSnapshot = null;
             }
         }
 
-        if (!wasEmpty && selectedPrimitives.isEmpty() && fireSelectionChangeEvent) {
+        if (changed && fireSelectionChangeEvent) {
             // If selection is not empty then event was already fired in addSelecteds
             fireSelectionChanged();
         }
@@ -492,8 +483,9 @@ public class DataSet implements Cloneable {
      *
      * @param selection the selection
      * @param fireSelectionChangeEvent true, if the selection change listeners are to be notified; false, otherwise
+     * @return if the selection was changed in the process
      */
-    public void addSelected(Collection<? extends PrimitiveId> selection, boolean fireSelectionChangeEvent) {
+    private boolean addSelected(Collection<? extends PrimitiveId> selection, boolean fireSelectionChangeEvent) {
         boolean changed = false;
         synchronized (selectionLock) {
             for (PrimitiveId id: selection) {
@@ -509,6 +501,7 @@ public class DataSet implements Cloneable {
         if (fireSelectionChangeEvent && changed) {
             fireSelectionChanged();
         }
+        return changed;
     }
 
     /**
@@ -549,18 +542,18 @@ public class DataSet implements Cloneable {
         getReadLock().lock();
         try {
             DataSet ds = new DataSet();
-            HashMap<OsmPrimitive, OsmPrimitive> primitivesMap = new HashMap<OsmPrimitive, OsmPrimitive>();
+            HashMap<OsmPrimitive, OsmPrimitive> primMap = new HashMap<OsmPrimitive, OsmPrimitive>();
             for (Node n : nodes) {
                 Node newNode = new Node(n);
-                primitivesMap.put(n, newNode);
+                primMap.put(n, newNode);
                 ds.addPrimitive(newNode);
             }
             for (Way w : ways) {
                 Way newWay = new Way(w);
-                primitivesMap.put(w, newWay);
+                primMap.put(w, newWay);
                 List<Node> newNodes = new ArrayList<Node>();
                 for (Node n: w.getNodes()) {
-                    newNodes.add((Node)primitivesMap.get(n));
+                    newNodes.add((Node)primMap.get(n));
                 }
                 newWay.setNodes(newNodes);
                 ds.addPrimitive(newWay);
@@ -570,14 +563,14 @@ public class DataSet implements Cloneable {
             for (Relation r : relations) {
                 Relation newRelation = new Relation(r, r.isNew());
                 newRelation.setMembers(null);
-                primitivesMap.put(r, newRelation);
+                primMap.put(r, newRelation);
                 ds.addPrimitive(newRelation);
             }
             for (Relation r : relations) {
-                Relation newRelation = (Relation)primitivesMap.get(r);
+                Relation newRelation = (Relation)primMap.get(r);
                 List<RelationMember> newMembers = new ArrayList<RelationMember>();
                 for (RelationMember rm: r.getMembers()) {
-                    newMembers.add(new RelationMember(rm.getRole(), primitivesMap.get(rm.getMember())));
+                    newMembers.add(new RelationMember(rm.getRole(), primMap.get(rm.getMember())));
                 }
                 newRelation.setMembers(newMembers);
             }
@@ -615,13 +608,22 @@ public class DataSet implements Cloneable {
      * @exception NullPointerException thrown, if type is null
      */
     public OsmPrimitive getPrimitiveById(long id, OsmPrimitiveType type) {
-        return getPrimitiveById(new SimplePrimitiveId(id, type), false);
+        return getPrimitiveById(new SimplePrimitiveId(id, type));
     }
 
     public OsmPrimitive getPrimitiveById(PrimitiveId primitiveId) {
-        return getPrimitiveById(primitiveId, false);
+        return primitivesMap.get(primitiveId);
     }
 
+    /**
+     *
+     * @param primitiveId
+     * @param createNew
+     * @return
+     * @deprecated This method can created inconsistent dataset when called for node with id < 0 and createNew=true. That will add
+     * complete node without coordinates to dataset which is not allowed.
+     */
+    @Deprecated
     public OsmPrimitive getPrimitiveById(PrimitiveId primitiveId, boolean createNew) {
         OsmPrimitive result = primitivesMap.get(primitiveId);
 
@@ -668,12 +670,12 @@ public class DataSet implements Cloneable {
         beginUpdate();
         try {
             for (Way way: ways) {
-                List<Node> nodes = way.getNodes();
-                if (nodes.remove(node)) {
-                    if (nodes.size() < 2) {
+                List<Node> wayNodes = way.getNodes();
+                if (wayNodes.remove(node)) {
+                    if (wayNodes.size() < 2) {
                         deleteWay(way);
                     } else {
-                        way.setNodes(nodes);
+                        way.setNodes(wayNodes);
                     }
                 }
             }
@@ -713,7 +715,7 @@ public class DataSet implements Cloneable {
     }
 
     /**
-     * removes all references from from other primitives  to the
+     * removes all references from other primitives to the
      * referenced primitive
      *
      * @param referencedPrimitive the referenced primitive
@@ -740,22 +742,19 @@ public class DataSet implements Cloneable {
      * {@see OsmPrimitive#isModified()} == <code>true</code>.
      */
     public boolean isModified() {
-        for (Node n: nodes) {
-            if (n.isModified()) return true;
-        }
-        for (Way w: ways) {
-            if (w.isModified()) return true;
-        }
-        for (Relation r: relations) {
-            if (r.isModified()) return true;
+        for (OsmPrimitive p: allPrimitives) {
+            if (p.isModified())
+                return true;
         }
         return false;
     }
 
     private void reindexNode(Node node, LatLon newCoor, EastNorth eastNorth) {
-        nodes.remove(node);
+        if (!nodes.remove(node))
+            throw new RuntimeException("Reindexing node failed to remove");
         node.setCoorInternal(newCoor, eastNorth);
-        nodes.add(node);
+        if (!nodes.add(node))
+            throw new RuntimeException("Reindexing node failed to add");
         for (OsmPrimitive primitive: node.getReferrers()) {
             if (primitive instanceof Way) {
                 reindexWay((Way)primitive);
@@ -767,9 +766,11 @@ public class DataSet implements Cloneable {
 
     private void reindexWay(Way way) {
         BBox before = way.getBBox();
-        ways.remove(way);
+        if (!ways.remove(way))
+            throw new RuntimeException("Reindexing way failed to remove");
         way.updatePosition();
-        ways.add(way);
+        if (!ways.add(way))
+            throw new RuntimeException("Reindexing way failed to add");
         if (!way.getBBox().equals(before)) {
             for (OsmPrimitive primitive: way.getReferrers()) {
                 reindexRelation((Relation)primitive);
@@ -898,7 +899,7 @@ public class DataSet implements Cloneable {
         highlightUpdateCount++;
     }
 
-    public void clenupDeletedPrimitives() {
+    public void cleanupDeletedPrimitives() {
         beginUpdate();
         try {
             if (cleanupDeleted(nodes.iterator())

@@ -51,6 +51,7 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.MarkerLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.PlayHeadMarker;
 import org.openstreetmap.josm.tools.AudioPlayer;
+import org.openstreetmap.josm.tools.BugReportExceptionHandler;
 
 /**
  * This is a component used in the MapFrame for browsing the map. It use is to
@@ -174,7 +175,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     /**
      * The last event performed by mouse.
      */
-    public MouseEvent lastMEvent;
+    public MouseEvent lastMEvent = new MouseEvent(this, 0, 0, 0, 0, 0, 0, false); // In case somebody reads it before first mouse move
 
     private LinkedList<MapViewPaintable> temporaryLayers = new LinkedList<MapViewPaintable>();
 
@@ -221,11 +222,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         });
 
         // listend to selection changes to redraw the map
-        DataSet.addSelectionListener(new SelectionChangedListener(){
-            public void selectionChanged(Collection<? extends OsmPrimitive> newSelection) {
-                repaint();
-            }
-        });
+        DataSet.addSelectionListener(repaintSelectionChangedListener);
 
         //store the last mouse action
         this.addMouseMotionListener(new MouseMotionListener() {
@@ -446,6 +443,9 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      * Draw the component.
      */
     @Override public void paint(Graphics g) {
+        if (BugReportExceptionHandler.exceptionHandlingInProgress())
+            return;
+
         if (center == null)
             return; // no data loaded yet.
 
@@ -802,6 +802,17 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     public void preferenceChanged(PreferenceChangeEvent e) {
         paintPreferencesChanged = true;
+    }
+
+    private SelectionChangedListener repaintSelectionChangedListener = new SelectionChangedListener(){
+        public void selectionChanged(Collection<? extends OsmPrimitive> newSelection) {
+            repaint();
+        }
+    };
+
+    public void destroy() {
+        Main.pref.removePreferenceChangeListener(this);
+        DataSet.removeSelectionListener(repaintSelectionChangedListener);
     }
 
 }

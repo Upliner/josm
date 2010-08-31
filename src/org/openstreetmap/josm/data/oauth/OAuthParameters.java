@@ -5,14 +5,13 @@ import oauth.signpost.OAuthConsumer;
 import oauth.signpost.OAuthProvider;
 import oauth.signpost.basic.DefaultOAuthConsumer;
 import oauth.signpost.basic.DefaultOAuthProvider;
-import oauth.signpost.signature.SignatureMethod;
 
 import org.openstreetmap.josm.data.Preferences;
 import org.openstreetmap.josm.tools.CheckParameterUtil;
 
 /**
  * This class manages a set of OAuth parameters.
- * 
+ *
  */
 public class OAuthParameters {
 
@@ -26,7 +25,7 @@ public class OAuthParameters {
     /**
      * Replies a set of default parameters for a consumer accessing the standard OSM server
      * at http://api.openstreetmap.org/api
-     * 
+     *
      * @return a set of default parameters
      */
     static public OAuthParameters createDefault() {
@@ -41,7 +40,7 @@ public class OAuthParameters {
 
     /**
      * Replies a set of parameters as defined in the preferences.
-     * 
+     *
      * @param pref the preferences
      * @return the parameters
      */
@@ -60,7 +59,7 @@ public class OAuthParameters {
 
     /**
      * Clears the preferences for OAuth parameters
-     * 
+     *
      * @param pref the preferences in which keys related to OAuth parameters are
      * removed
      */
@@ -83,7 +82,7 @@ public class OAuthParameters {
 
     /**
      * Creates a clone of the parameters in <code>other</code>.
-     * 
+     *
      * @param other the other parameters. Must not be null.
      * @throws IllegalArgumentException thrown if other is null
      */
@@ -129,16 +128,17 @@ public class OAuthParameters {
 
     /**
      * Builds an {@see OAuthConsumer} based on these parameters
-     * 
+     *
      * @return the consumer
      */
     public OAuthConsumer buildConsumer() {
-        return new DefaultOAuthConsumer(consumerKey, consumerSecret, SignatureMethod.HMAC_SHA1);
+        OAuthConsumer consumer = new DefaultOAuthConsumer(consumerKey, consumerSecret);
+        return consumer;
     }
 
     /**
      * Builds an {@see OAuthProvider} based on these parameters and a OAuth consumer <code>consumer</code>.
-     * 
+     *
      * @param consumer the consumer. Must not be null.
      * @return the provider
      * @throws IllegalArgumentException thrown if consumer is null
@@ -146,7 +146,6 @@ public class OAuthParameters {
     public OAuthProvider buildProvider(OAuthConsumer consumer) throws IllegalArgumentException {
         CheckParameterUtil.ensureParameterNotNull(consumer, "consumer");
         return new DefaultOAuthProvider(
-                consumer,
                 requestTokenUrl,
                 accessTokenUrl,
                 authoriseUrl

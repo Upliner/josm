@@ -53,7 +53,7 @@ public class ProjectionPreference implements PreferenceSetting {
             return "projection.sub."+sname;
         }
     };
-    private static final StringProperty PROP_SYSTEM_OF_MEASUREMENT = new StringProperty("system_of_measurement", "Metric");
+    public static final StringProperty PROP_SYSTEM_OF_MEASUREMENT = new StringProperty("system_of_measurement", "Metric");
     private static final String[] unitsValues = (new ArrayList<String>(NavigatableComponent.SYSTEMS_OF_MEASUREMENT.keySet())).toArray(new String[0]);
     private static final String[] unitsValuesTr = new String[unitsValues.length];
     static {
@@ -106,7 +106,7 @@ public class ProjectionPreference implements PreferenceSetting {
     /**
      * This is the panel holding all projection preferences
      */
-    private JPanel projPanel = new JPanel();
+    private JPanel projPanel = new JPanel(new GridBagLayout());
 
     /**
      * The GridBagConstraints for the Panel containing the ProjectionSubPrefs.

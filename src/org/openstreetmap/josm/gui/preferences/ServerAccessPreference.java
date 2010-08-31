@@ -14,7 +14,6 @@ import javax.swing.JTabbedPane;
 
 import org.openstreetmap.josm.gui.help.HelpUtil;
 import org.openstreetmap.josm.gui.preferences.server.AuthenticationPreferencesPanel;
-import org.openstreetmap.josm.gui.preferences.server.BackupPreferencesPanel;
 import org.openstreetmap.josm.gui.preferences.server.OsmApiUrlInputPanel;
 import org.openstreetmap.josm.gui.preferences.server.ProxyPreferencesPanel;
 import org.openstreetmap.josm.gui.widgets.VerticallyScrollablePanel;
@@ -35,7 +34,6 @@ public class ServerAccessPreference implements PreferenceSetting {
     /** panel for configuring proxy preferences */
     private ProxyPreferencesPanel pnlProxyPreferences;
     /** panel for backup preferences */
-    private BackupPreferencesPanel pnlBackupPreferences;
 
     /**
      * Embeds a vertically scrollable panel in a {@see JScrollPane}
@@ -62,15 +60,11 @@ public class ServerAccessPreference implements PreferenceSetting {
         tpServerPreferences.add(wrapVerticallyScrollablePanel(pnlAuthPreferences));
         pnlProxyPreferences = new ProxyPreferencesPanel();
         tpServerPreferences.add(wrapVerticallyScrollablePanel(pnlProxyPreferences));
-        pnlBackupPreferences = new BackupPreferencesPanel();
-        tpServerPreferences.add(wrapVerticallyScrollablePanel(pnlBackupPreferences));
 
         tpServerPreferences.setTitleAt(0, tr("Authentication"));
         tpServerPreferences.setTitleAt(1, tr("Proxy settings"));
-        tpServerPreferences.setTitleAt(2, tr("File backup"));
         tpServerPreferences.setToolTipTextAt(0, tr("Configure your identity and how to authenticate at the OSM server"));
         tpServerPreferences.setToolTipTextAt(1, tr("Configure whether to use a proxy server"));
-        tpServerPreferences.setToolTipTextAt(2, tr("Configure whether to create backup files"));
 
         pnl.add(tpServerPreferences, BorderLayout.CENTER);
         return pnl;
@@ -126,7 +120,6 @@ public class ServerAccessPreference implements PreferenceSetting {
         pnlApiUrlPreferences.initFromPreferences();
         pnlAuthPreferences.initFromPreferences();
         pnlProxyPreferences.initFromPreferences();
-        pnlBackupPreferences.initFromPreferences();
     }
 
     /**
@@ -136,7 +129,6 @@ public class ServerAccessPreference implements PreferenceSetting {
         pnlApiUrlPreferences.saveToPreferences();
         pnlAuthPreferences.saveToPreferences();
         pnlProxyPreferences.saveToPreferences();
-        pnlBackupPreferences.saveToPreferences();
         return false;
     }
 }

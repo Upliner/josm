@@ -304,7 +304,7 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
     /* This should not be called from outside. Fixing the UI to add relevant
        get/set functions calling this implicitely is preferred, so we can have
        transparent cache handling in the future. */
-    protected void clearCached()
+    public void clearCached()
     {
         mappaintDrawnCode = 0;
         mappaintStyle = null;
@@ -616,11 +616,13 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * @param hide if the primitive should be completely hidden from view or
      *             just shown in gray color.
      */
-    public void setDisabledState(boolean hide) {
+    public boolean setDisabledState(boolean hide) {
         boolean locked = writeLock();
         try {
+            int oldFlags = flags;
             updateFlagsNoLock(FLAG_DISABLED, true);
             updateFlagsNoLock(FLAG_HIDE_IF_DISABLED, hide);
+            return oldFlags != flags;
         } finally {
             writeUnlock(locked);
         }
@@ -631,8 +633,15 @@ abstract public class OsmPrimitive implements Comparable<OsmPrimitive>, Tagged, 
      * Afterwards, the primitive is displayed normally and can be selected
      * again.
      */
-    public void unsetDisabledState() {
-        updateFlags(FLAG_DISABLED + FLAG_HIDE_IF_DISABLED, false);
+    public boolean unsetDisabledState() {
+        boolean locked = writeLock();
+        try {
+            int oldFlags = flags;
+            updateFlagsNoLock(FLAG_DISABLED + FLAG_HIDE_IF_DISABLED, false);
+            return oldFlags != flags;
+        } finally {
+            writeUnlock(locked);
+        }
     }
 
     /**
