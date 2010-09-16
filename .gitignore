@@ -1,5 +1,7 @@
 bin
 build
+data/elemstyles.xml
 dist
+test/report/
 .svn
 */.svn
