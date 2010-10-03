@@ -25,8 +25,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
 
@@ -204,32 +202,36 @@ public class Preferences {
 
     synchronized public Map<String, String> getAllPrefix(final String prefix) {
         final Map<String,String> all = new TreeMap<String,String>();
-        for (final Entry<String,String> e : properties.entrySet())
+        for (final Entry<String,String> e : properties.entrySet()) {
             if (e.getKey().startsWith(prefix)) {
                 all.put(e.getKey(), e.getValue());
             }
+        }
         return all;
     }
 
     synchronized private Map<String, String> getAllPrefixDefault(final String prefix) {
         final Map<String,String> all = new TreeMap<String,String>();
-        for (final Entry<String,String> e : defaults.entrySet())
+        for (final Entry<String,String> e : defaults.entrySet()) {
             if (e.getKey().startsWith(prefix)) {
                 all.put(e.getKey(), e.getValue());
             }
+        }
         return all;
     }
 
     synchronized public TreeMap<String, String> getAllColors() {
         final TreeMap<String,String> all = new TreeMap<String,String>();
-        for (final Entry<String,String> e : defaults.entrySet())
+        for (final Entry<String,String> e : defaults.entrySet()) {
             if (e.getKey().startsWith("color.") && e.getValue() != null) {
                 all.put(e.getKey().substring(6), e.getValue());
             }
-        for (final Entry<String,String> e : properties.entrySet())
+        }
+        for (final Entry<String,String> e : properties.entrySet()) {
             if (e.getKey().startsWith("color.")) {
                 all.put(e.getKey().substring(6), e.getValue());
             }
+        }
         return all;
     }
 
@@ -578,17 +580,22 @@ public class Preferences {
             return Arrays.asList(s.split("\u001e"));
         return def;
     }
+
     synchronized public void removeFromCollection(String key, String value) {
         List<String> a = new ArrayList<String>(getCollection(key, Collections.<String>emptyList()));
         a.remove(value);
         putCollection(key, a);
     }
+
     synchronized public boolean putCollection(String key, Collection<String> val) {
         String s = null;
         if(val != null)
         {
             for(String a : val)
             {
+                if (a == null) {
+                    a = "";
+                }
                 if(s != null) {
                     s += "\u001e" + a;
                 } else {
@@ -598,66 +605,73 @@ public class Preferences {
         }
         return put(key, s);
     }
+    
     synchronized private void putCollectionDefault(String key, Collection<String> val) {
         String s = null;
-        if(val != null)
+        for(String a : val)
         {
-            for(String a : val)
-            {
-                if(s != null) {
-                    s += "\u001e" + a;
-                } else {
-                    s = a;
-                }
+            if(s != null) {
+                s += "\u001e" + a;
+            } else {
+                s = a;
             }
         }
         putDefault(key, s);
     }
+    
     synchronized public Collection<Collection<String>> getArray(String key,
     Collection<Collection<String>> def) {
-        if(def != null) {
-            for(String k : getAllPrefixDefault(key + ".").keySet())
-                put(k, null);
-            int num = 0;
-            for(Collection<String> c : def)
-                putCollectionDefault(key+"."+num++, c);
-        }
-        String s = get(key+".0");
-        if(s != null && s.length() != 0)
-        {
-            Collection<Collection<String>> col = new LinkedList<Collection<String>>();
-            for(int num = 0; ; ++num) {
-                Collection<String> c = getCollection(key+"."+num, null);
-                if(c == null)
-                    break;
-                col.add(c);
-            }
-            return col;
-        }
-        return def;
-    }
-    synchronized public boolean putArray(String key, Collection<Collection<String>> val) {
-        boolean res = true;
-        Collection<String> keys = getAllPrefix(key).keySet();
+        if(def != null)
+            putArrayDefault(key, def);
         key += ".";
+        int num = 0;
+        Collection<Collection<String>> col = new LinkedList<Collection<String>>();
+        while(properties.containsKey(key+num)) {
+            col.add(getCollection(key+num++, null));
+        }
+        return num == 0 && def != null ? def : col;
+    }
+    
+    synchronized public boolean putArray(String key, Collection<Collection<String>> val) {
+        boolean changed = false;
+        key += ".";
+        Collection<String> keys = getAllPrefix(key).keySet();
         if(val != null) {
-            String s = null;
             int num = 0;
             for(Collection<String> c : val) {
                 keys.remove(key+num);
-                if(!putCollection(key+num++, c))
-                    res = false;
+                changed |= putCollection(key+num++, c);
             }
         }
         int l = key.length();
         for(String k : keys) {
             try {
-              Integer.valueOf(k.substring(l));
-              put(k, null);
-            } catch(Exception e) {
+                Integer.valueOf(k.substring(l));
+                changed |= put(k, null);
+            } catch(NumberFormatException e) {
+                /* everything which does not end with a number should not be deleted */
             }
         }
-        return res;
+        return changed;
+    }
+
+    synchronized private void putArrayDefault(String key, Collection<Collection<String>> val) {
+        key += ".";
+        Collection<String> keys = getAllPrefixDefault(key).keySet();
+        int num = 0;
+        for(Collection<String> c : val) {
+            keys.remove(key+num);
+            putCollectionDefault(key+num++, c);
+        }
+        int l = key.length();
+        for(String k : keys) {
+            try {
+                Integer.valueOf(k.substring(l));
+                defaults.remove(k);
+            } catch(Exception e) {
+                /* everything which does not end with a number should not be deleted */
+            }
+        }
     }
 
     /**

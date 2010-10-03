@@ -154,6 +154,14 @@ public class PluginInformation {
         if(s == null) {
             s = attr.getValue("Plugin-Link");
         }
+        if(s != null) {
+            try {
+                URL url = new URL(s);
+            } catch (MalformedURLException e) {
+                System.out.println(tr("Invalid URL ''{0}'' in plugin {1}", s, name));
+                s = null;
+            }
+        }
         link = s;
         requires = attr.getValue("Plugin-Requires");
         s = attr.getValue(lang+"Plugin-Description");
@@ -209,7 +217,7 @@ public class PluginInformation {
         if (classPath != null) {
             for (String entry : classPath.split(" ")) {
                 File entryFile;
-                if (new File(entry).isAbsolute()) {
+                if (new File(entry).isAbsolute() || file == null) {
                     entryFile = new File(entry);
                 } else {
                     entryFile = new File(file.getParent(), entry);

@@ -86,8 +86,6 @@ public class MainApplet extends JApplet {
         // call the really early hook before we do anything else
         Main.platform.preStartupHook();
 
-        Main.preConstructorInit(args);
-
         Main.pref = new ServerSidePreferences(getCodeBase());
         if(!((ServerSidePreferences)Main.pref).download()) {
             String username = args.containsKey("username") ? args.get("username").iterator().next() : null;
@@ -117,7 +115,6 @@ public class MainApplet extends JApplet {
         MainMenu m = Main.main.menu; // shortcut
 
         // remove offending stuff from JOSM (that would break the SecurityManager)
-        m.remove(m.fileMenu);
         m.editMenu.add(new UploadPreferencesAction());
         m.openFile.setEnabled(false);
         m.exit.setEnabled(false);
@@ -140,6 +137,7 @@ public class MainApplet extends JApplet {
     public static void main(String[] args) {
         Main.applet = true;
         MainApplet applet = new MainApplet();
+        Main.pref = new ServerSidePreferences(applet.getCodeBase());
         applet.setStub(new AppletStub() {
             public void appletResize(int w, int h) {
                 frame.setSize(w, h);

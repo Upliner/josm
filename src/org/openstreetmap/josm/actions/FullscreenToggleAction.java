@@ -3,6 +3,12 @@ package org.openstreetmap.josm.actions;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
+import java.awt.Frame;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -10,13 +16,9 @@ import java.util.List;
 
 import javax.swing.ButtonModel;
 
-/* For enabling fullscreen */
-import java.awt.Frame;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import org.openstreetmap.josm.tools.PlatformHookUnixoid;
-
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.tools.PlatformHookUnixoid;
+import org.openstreetmap.josm.tools.PlatformHookWindows;
 import org.openstreetmap.josm.tools.Shortcut;
 
 public class FullscreenToggleAction extends JosmAction {
@@ -25,6 +27,8 @@ public class FullscreenToggleAction extends JosmAction {
     // Java 6
     private boolean selected;
     private GraphicsDevice gd;
+    private Rectangle prevBounds;
+
     public FullscreenToggleAction() {
         super(
                 tr("Fullscreen View"),
@@ -71,11 +75,42 @@ public class FullscreenToggleAction extends JosmAction {
         Main.pref.put("draw.fullscreen", selected);
         notifySelectedState();
 
+        Frame frame = (Frame) Main.parent;
+
+        List<Window> visibleWindows = new ArrayList<Window>();
+        visibleWindows.add(frame);
+        for (Window w : Frame.getWindows()) {
+            if (w.isVisible() && w != frame) {
+                visibleWindows.add(w);
+            }
+        }
+
+        frame.dispose();
+        frame.setUndecorated(selected);
+
         if (selected) {
-            Frame frame = (Frame)Main.parent;
-            gd.setFullScreenWindow(frame);
-        } else {
-            gd.setFullScreenWindow(null);
+            prevBounds = frame.getBounds();
+            frame.setBounds(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
+        }
+        
+        // we cannot use hw-exclusive fullscreen mode in MS-Win, as long
+        // as josm throws out modal dialogs, see here:
+        // http://forums.sun.com/thread.jspa?threadID=5351882
+        //
+        // the good thing is: fullscreen works without exclusive mode,
+        // since windows (or java?) draws the undecorated window full-
+        // screen by default (it's a simulated mode, but should be ok)
+        String exclusive = Main.pref.get("draw.fullscreen.exclusive-mode", "auto");
+        if ("true".equals(exclusive) || ("auto".equals(exclusive) && !(Main.platform instanceof PlatformHookWindows))) {
+            gd.setFullScreenWindow(selected ? frame : null);
+        }
+
+        if (!selected && prevBounds != null) {
+            frame.setBounds(prevBounds);
+        }
+
+        for (Window wind : visibleWindows) {
+            wind.setVisible(true);
         }
     }
 
