@@ -42,6 +42,38 @@ import org.openstreetmap.josm.tools.Predicate;
  * Note that DataSet is not an osm-primitive and so has no key association but a few members to
  * store some information.
  *
+ * Dataset is threadsafe - accessing Dataset simultaneously from different threads should never
+ * lead to data corruption or ConccurentModificationException. However when for example one thread
+ * removes primitive and other thread try to add another primitive reffering to the removed primitive,
+ * DataIntegrityException will occur.
+ *
+ * To prevent such situations, read/write lock is provided. While read lock is used, it's guaranteed that
+ * Dataset will not change. Sample usage:
+ * <code>
+ *   ds.getReadLock().lock();
+ *   try {
+ *     // .. do something with dataset
+ *   } finally {
+ *     ds.getReadLock().unlock();
+ *   }
+ * </code>
+ *
+ * Write lock should be used in case of bulk operations. In addition to ensuring that other threads can't
+ * use dataset in the middle of modifications it also stops sending of dataset events. That's good for performance
+ * reasons - GUI can be updated after all changes are done.
+ * Sample usage:
+ * <code>
+ * ds.beginUpdate()
+ * try {
+ *   // .. do modifications
+ * } finally {
+ *  ds.endUpdate();
+ * }
+ * </code>
+ *
+ * Note that it is not necessary to call beginUpdate/endUpdate for every dataset modification - dataset will get locked
+ * automatically.
+ *
  * @author imi
  */
 public class DataSet implements Cloneable {
@@ -151,7 +183,12 @@ public class DataSet implements Cloneable {
     }
 
     public List<Node> searchNodes(BBox bbox) {
-        return nodes.search(bbox);
+        lock.readLock().lock();
+        try {
+            return nodes.search(bbox);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -171,7 +208,12 @@ public class DataSet implements Cloneable {
     }
 
     public List<Way> searchWays(BBox bbox) {
-        return ways.search(bbox);
+        lock.readLock().lock();
+        try {
+            return ways.search(bbox);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -189,14 +231,19 @@ public class DataSet implements Cloneable {
     }
 
     public List<Relation> searchRelations(BBox bbox) {
-        // QuadBuckets might be useful here (don't forget to do reindexing after some of rm is changed)
-        List<Relation> result = new ArrayList<Relation>();
-        for (Relation r: relations) {
-            if (r.getBBox().intersects(bbox)) {
-                result.add(r);
+        lock.readLock().lock();
+        try {
+            // QuadBuckets might be useful here (don't forget to do reindexing after some of rm is changed)
+            List<Relation> result = new ArrayList<Relation>();
+            for (Relation r: relations) {
+                if (r.getBBox().intersects(bbox)) {
+                    result.add(r);
+                }
             }
+            return result;
+        } finally {
+            lock.readLock().unlock();
         }
-        return result;
     }
 
     /**
