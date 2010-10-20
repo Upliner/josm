@@ -1,3 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rules xmlns="http://josm.openstreetmap.de/mappaint-style-1.0"
+       name="standard">
 <!--
 A little help:
 1. every rule starts with <rule> and ends with </rule>
@@ -68,8 +71,6 @@ For external files the <rules> should have following elements:
                    - when the style replaces the whole rendering choose a new name
                    - when the style is additional choose "standard" or don't use name tag
 -->
-
-<rules name="standard">
 
 	<rule>
 		<condition k="restriction" v="no_left_turn"/>
@@ -958,7 +959,7 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="traffic_calming" v="chicane"/>
-		<icon annotate="true" src="misc/no_icon.png"/>
+		<icon annotate="true" src="misc/chicane.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -1234,7 +1235,7 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="railway" v="tram_stop"/>
-		<icon annotate="true" src="transport/railway_small.png"/>
+		<icon annotate="true" src="transport/tram.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -1475,7 +1476,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="aerialway" v="gondola"/>
 		<line width="1" colour="aerialway#663300" dashed="9"/>
-		<icon annotate="true" src="transport/aerialway/cable_car.png"/>
+		<icon annotate="true" src="transport/aerialway/gondola.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -1515,7 +1516,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="aerialway" v="goods"/>
 		<line width="1" colour="aerialway#663300" dashed="1"/>
-		<icon annotate="true" src="misc/no_icon.png"/>
+		<icon annotate="true" src="transport/aerialway/goods.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -1626,6 +1627,13 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="power" v="cable_distribution_cabinet"/>
+		<icon annotate="true" src="misc/landmark/power.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="power_source" v="wind"/>
 		<icon annotate="true" src="misc/landmark/power/wind.png"/>
 		<area colour="power#eeeeee"/>
@@ -1700,6 +1708,14 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="man_made" v="chimney"/>
+		<icon annotate="true" src="misc/landmark/chimney.png"/>
+		<area colour="manmade#d8d8d8"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="man_made" v="crane"/>
 		<area colour="manmade#d8d8d8"/>
 		<icon annotate="true" src="misc/landmark/crane.png"/>
@@ -1724,8 +1740,32 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="man_made" v="groyne"/>
+		<icon annotate="true" src="misc/no_icon.png"/>
+		<area colour="manmade#d8d8d8"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="man_made" v="lighthouse"/>
 		<icon annotate="true" src="misc/landmark/lighthouse.png"/>
+		<area colour="manmade#d8d8d8"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="man_made" v="mineshaft"/>
+		<icon annotate="true" src="misc/landmark/mine.png"/>
+		<area colour="manmade#d8d8d8"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="man_made" v="adit"/>
+		<icon annotate="true" src="vehicle/tunnel.png"/>
 		<area colour="manmade#d8d8d8"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -1812,6 +1852,14 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="man_made" v="water_well"/>
+		<icon annotate="true" src="misc/no_icon.png"/>
+		<area colour="manmade#d8d8d8"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="man_made" v="windmill"/>
 		<icon annotate="true" src="misc/landmark/windmill.png"/>
 		<area colour="manmade#d8d8d8"/>
@@ -1829,7 +1877,7 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="man_made" v="water_works"/>
-		<icon annotate="true" src="misc/no_icon.png"/>
+		<icon annotate="true" src="misc/landmark/water_works.png"/>
 		<area colour="manmade#d8d8d8"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -1976,6 +2024,14 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="leisure" v="ice_rink"/>
 		<icon annotate="true" src="sport/hockey.png"/>
+		<area colour="leisure#c7f1a3"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="leisure" v="sauna"/>
+		<icon annotate="true" src="leisure/sauna.png"/>
 		<area colour="leisure#c7f1a3"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -2176,6 +2232,13 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="amenity" v="charging_station"/>
+		<icon annotate="true" src="accommodation/camping/hookup.png" priority="1000"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="amenity" v="grit_bin"/>
 		<icon annotate="true" src="misc/grit_bin.png"/>
 		<scale_min>1</scale_min>
@@ -2238,7 +2301,7 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="amenity" v="embassy"/>
-		<icon annotate="true" src="service.png"/>
+		<icon annotate="true" src="service/administration/embassy.png"/>
 		<area colour="amenity_light#f7efb7"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -2254,7 +2317,7 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="amenity" v="community_centre"/>
-		<icon annotate="true" src="service.png"/>
+		<icon annotate="true" src="service/community_centre.png"/>
 		<area colour="amenity_light#f7efb7"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -2408,6 +2471,14 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="amenity" v="studio"/>
+		<icon annotate="true" src="service/studio.png"/>
+		<area colour="amenity_light#f7efb7"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="amenity" v="school"/>
 		<icon annotate="true" src="education/school.png"/>
 		<area colour="amenity_light#f7efb7"/>
@@ -2473,7 +2544,7 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="amenity" v="baby_hatch"/>
-		<icon annotate="true" src="misc/no_icon.png"/>
+		<icon annotate="true" src="health/baby_hatch.png"/>
 		<area colour="health#eeeeee"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -2785,6 +2856,14 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="shop" v="boutique"/>
+		<icon annotate="true" src="shop/boutique.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="shop" v="car"/>
 		<icon annotate="true" src="transport/car.png"/>
 		<area colour="shop#00005f"/>
@@ -2841,6 +2920,30 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="shop" v="confectionery"/>
+		<icon annotate="true" src="shop/groceries/confectionery.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="copyshop"/>
+		<icon annotate="true" src="shop/copyshop.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="curtain"/>
+		<icon annotate="true" src="shop/curtain.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="shop" v="cycle_repair"/>
 		<icon annotate="true" src="sport/bicycle.png"/>
 		<area colour="shop#00005f"/>
@@ -2857,8 +2960,24 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="shop" v="deli"/>
+		<icon annotate="true" src="shop/groceries/deli.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="shop" v="electronics"/>
 		<icon annotate="true" src="shop/electronics.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="erotic"/>
+		<icon annotate="true" src="shop/erotic.png"/>
 		<area colour="shop#00005f"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -2873,6 +2992,14 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="shop" v="fabric"/>
+		<icon annotate="true" src="shop/fabric.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="shop" v="florist"/>
 		<icon annotate="true" src="shop/florist.png"/>
 		<area colour="shop#00005f"/>
@@ -2881,9 +3008,26 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
-		<condition k="shop" v="groceries"/>
-		<icon annotate="true" src="shop/groceries/fruits.png"/>
+		<condition k="shop" v="frame"/>
+		<icon annotate="true" src="shop/frame.png"/>
 		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="greengrocer"/>
+		<icon annotate="true" src="shop/groceries/greengrocer.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+        <!-- superseeded by greengrocer -->
+		<condition k="shop" v="groceries"/>
+		<icon annotate="true" src="misc/deprecated.png"/>
+		<area colour="deprecated#ff0000"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -2906,7 +3050,15 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="shop" v="hardware"/>
-		<icon annotate="true" src="shop/diy_store.png"/>
+		<icon annotate="true" src="shop/hardware.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="hearing_aids"/>
+		<icon annotate="true" src="shop/hearing_aids.png"/>
 		<area colour="shop#00005f"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -2929,6 +3081,14 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="shop" v="kitchen"/>
+		<icon annotate="true" src="shop/kitchen.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="shop" v="mall"/>
 		<icon annotate="true" src="shop/mall.png"/>
 		<area colour="shop#00005f"/>
@@ -2937,8 +3097,24 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="shop" v="mobile_phone"/>
+		<icon annotate="true" src="shop/mobile_phone.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="shop" v="motorcycle"/>
 		<icon annotate="true" src="vehicle/motorbike.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="musical_instrument"/>
+		<icon annotate="true" src="shop/musical_instrument.png"/>
 		<area colour="shop#00005f"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -2969,6 +3145,22 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="shop" v="paint"/>
+		<icon annotate="true" src="shop/paint.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="seafood"/>
+		<icon annotate="true" src="shop/groceries/seafood.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="shop" v="shoes"/>
 		<icon annotate="true" src="shop/shoes.png"/>
 		<area colour="shop#00005f"/>
@@ -2986,7 +3178,7 @@ For external files the <rules> should have following elements:
 
 	<rule>
 		<condition k="shop" v="stationery"/>
-		<icon annotate="true" src="misc/no_icon.png"/>
+		<icon annotate="true" src="shop/stationery.png"/>
 		<area colour="shop#00005f"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -3011,6 +3203,22 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="shop" v="toys"/>
 		<icon annotate="true" src="shop/toys.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="vacuum_cleaner"/>
+		<icon annotate="true" src="shop/vacuum_cleaner.png"/>
+		<area colour="shop#00005f"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="variety_store"/>
+		<icon annotate="true" src="shop/variety_store.png"/>
 		<area colour="shop#00005f"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -3366,6 +3574,14 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
+		<condition k="landuse" v="greenhouse_horticulture"/>
+		<area colour="green#b1e0c2"/>
+		<icon src="misc/landmark/greenhouse_horticulture.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="landuse" v="grass"/>
 		<area colour="green#b1e0c2"/>
 		<icon src="misc/landmark/plant.png"/>
@@ -3377,6 +3593,14 @@ For external files the <rules> should have following elements:
 		<condition k="landuse" v="residential"/>
 		<area colour="residential#f0f0f0"/>
 		<icon src="misc/landuse/residential.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="landuse" v="garages"/>
+		<area colour="garages#f0f0f0"/>
+		<icon src="misc/landuse/garages.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -3845,7 +4069,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="sport" v="athletics"/>
 		<area colour="sport#bde3cb"/>
-		<icon src="misc/no_icon.png"/>
+		<icon src="sport/athletics.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -4045,7 +4269,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="sport" v="karting"/>
 		<area colour="sport#bde3cb"/>
-		<icon src="misc/no_icon.png"/>
+		<icon src="sport/karting.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -4077,7 +4301,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="sport" v="pelota"/>
 		<area colour="sport#bde3cb"/>
-		<icon src="misc/no_icon.png"/>
+		<icon src="sport/pelota.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -4093,7 +4317,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="sport" v="skating"/>
 		<area colour="sport#bde3cb"/>
-		<icon src="misc/no_icon.png"/>
+		<icon src="sport/skating.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -4173,7 +4397,7 @@ For external files the <rules> should have following elements:
 	<rule>
 		<condition k="sport" v="beachvolleyball"/>
 		<area colour="sport#bde3cb"/>
-		<icon annotate="true" src="sport/volleyball.png"/>
+		<icon annotate="true" src="sport/beachvolleyball.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -4243,17 +4467,9 @@ For external files the <rules> should have following elements:
 	</rule>
 
 	<rule>
-		<condition k="sport" v="karting"/>
-		<area colour="sport#bde3cb"/>
-		<icon annotate="true" src="misc/no_icon.png"/>
-		<scale_min>1</scale_min>
-		<scale_max>50000</scale_max>
-	</rule>
-
-	<rule>
 		<condition k="sport" v="safety_training"/>
 		<area colour="sport#bde3cb"/>
-		<icon annotate="true" src="misc/no_icon.png"/>
+		<icon annotate="true" src="sport/safety_training.png"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>
@@ -4543,14 +4759,14 @@ For external files the <rules> should have following elements:
 
 	<rule> 
 		<condition k="fixme"/> 
-		<icon annotate="true" src="fixme.png" priority="-10000"/>
+		<icon annotate="true" src="misc/fixme.png" priority="10000"/>
 		<scale_min>1</scale_min> 
 		<scale_max>50000</scale_max> 
 	</rule> 
 
 	<rule> 
 		<condition k="FIXME"/> 
-		<icon annotate="true" src="fixme.png" priority="-10000"/>
+		<icon annotate="true" src="misc/fixme.png" priority="10000"/>
 		<scale_min>1</scale_min> 
 		<scale_max>50000</scale_max> 
 	</rule> 
@@ -4558,14 +4774,14 @@ For external files the <rules> should have following elements:
 <!--public_transport tags --> 
 	<rule> 
 		<condition k="public_transport" v="stop_position"/> 
-		<icon annotate="true" src="misc/no_icon.png"/>
+		<icon annotate="true" src="misc/no_icon.png" priority="-10"/>
 		<scale_min>1</scale_min> 
 		<scale_max>50000</scale_max> 
 	</rule> 
 
 	<rule> 
 		<condition k="public_transport" v="platform"/> 
-		<icon annotate="true" src="misc/no_icon.png"/>
+		<icon annotate="true" src="misc/no_icon.png" priority="-10"/>
 		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/> 
 		<scale_min>1</scale_min> 
 		<scale_max>50000</scale_max> 
