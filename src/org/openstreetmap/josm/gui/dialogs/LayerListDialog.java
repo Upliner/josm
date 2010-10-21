@@ -27,11 +27,15 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.KeyStroke;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
@@ -99,6 +103,8 @@ public class LayerListDialog extends ToggleDialog {
     /** the list of layers */
     private LayerList layerList;
 
+    private SideButton opacityButton;
+
     ActivateLayerAction activateLayerAction;
 
     protected JPanel createButtonPanel() {
@@ -146,6 +152,12 @@ public class LayerListDialog extends ToggleDialog {
         layerList.getActionMap().put("deleteLayer", deleteLayerAction);
         adaptTo(deleteLayerAction, selectionModel);
         buttonPanel.add(new SideButton(deleteLayerAction, false));
+
+        //-- layer opacity action
+        LayerOpacityAction layerOpacityAction = new LayerOpacityAction();
+        adaptTo(layerOpacityAction, selectionModel);
+        opacityButton = new SideButton(layerOpacityAction);
+        buttonPanel.add(opacityButton);
 
         return buttonPanel;
     }
@@ -398,6 +410,101 @@ public class LayerListDialog extends ToggleDialog {
         @Override
         public boolean equals(Object obj) {
             return obj instanceof ShowHideLayerAction;
+        }
+
+        @Override
+        public int hashCode() {
+            return getClass().hashCode();
+        }
+    }
+
+    public final class LayerOpacityAction extends AbstractAction implements IEnabledStateUpdating, LayerAction {
+        private Layer layer;
+        private JPopupMenu popup;
+        private JSlider slider = new JSlider(JSlider.VERTICAL);
+
+        /**
+         * Creates a {@see ShowHideLayerAction} which toggle the visibility of
+         * a specific layer.
+         *
+         * @param layer  the layer. Must not be null.
+         * @exception IllegalArgumentException thrown, if layer is null
+         */
+        public LayerOpacityAction(Layer layer) throws IllegalArgumentException {
+            this();
+            CheckParameterUtil.ensureParameterNotNull(layer, "layer");
+            this.layer = layer;
+            updateEnabledState();
+        }
+
+        /**
+         * Creates a {@see ShowHideLayerAction} which will toggle the visibility of
+         * the currently selected layers
+         *
+         */
+        public LayerOpacityAction() {
+            putValue(SHORT_DESCRIPTION, tr("Adjust opacity of the layer."));
+            putValue(NAME, tr("Opacity"));
+            updateEnabledState();
+
+            popup = new JPopupMenu();
+            slider.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(ChangeEvent e) {
+                    setOpacity((double)slider.getValue()/100);
+                }
+            });
+            popup.add(slider);
+        }
+
+        private void setOpacity(double value) {
+            if (!isEnabled()) return;
+            if (layer != null) {
+                layer.setOpacity(value);
+            } else {
+                for(Layer layer: model.getSelectedLayers()) {
+                    layer.setOpacity(value);
+                }
+            }
+        }
+
+        private double getOpacity() {
+            if (layer != null)
+                return layer.getOpacity();
+            else {
+                double opacity = 0;
+                List<Layer> layers = model.getSelectedLayers();
+                for(Layer layer: layers) {
+                    opacity += layer.getOpacity();
+                }
+                return opacity / layers.size();
+            }
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            slider.setValue((int)Math.round(getOpacity()*100));
+            popup.show(opacityButton, 0, opacityButton.getHeight());
+        }
+
+        public void updateEnabledState() {
+            if (layer == null) {
+                setEnabled(! getModel().getSelectedLayers().isEmpty());
+            } else {
+                setEnabled(true);
+            }
+        }
+
+        public Component createMenuComponent() {
+            return new JMenuItem(this);
+        }
+
+        public boolean supportLayers(List<Layer> layers) {
+            return true;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof LayerOpacityAction;
         }
 
         @Override
