@@ -1,10 +1,6 @@
 // License: GPL. Copyright 2007 by Immanuel Scholz and others
 package org.openstreetmap.josm.actions;
 
-import static org.openstreetmap.josm.actions.AddIntersectionsAction.addIntersections;
-import static org.openstreetmap.josm.gui.conflict.tags.TagConflictResolutionUtil.combineTigerTags;
-import static org.openstreetmap.josm.gui.conflict.tags.TagConflictResolutionUtil.completeTagCollectionForEditing;
-import static org.openstreetmap.josm.gui.conflict.tags.TagConflictResolutionUtil.normalizeTagCollectionBeforeEditing;
 import static org.openstreetmap.josm.tools.I18n.marktr;
 import static org.openstreetmap.josm.tools.I18n.tr;
 import static org.openstreetmap.josm.tools.I18n.trn;
@@ -46,9 +42,14 @@ import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.TagCollection;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.conflict.tags.CombinePrimitiveResolverDialog;
+import org.openstreetmap.josm.gui.conflict.tags.TagConflictResolutionUtil;
+import org.openstreetmap.josm.tools.Geometry;
 import org.openstreetmap.josm.tools.Pair;
 import org.openstreetmap.josm.tools.Shortcut;
 
+/**
+ * Join Areas (i.e. closed ways and multipolygons)
+ */
 public class JoinAreasAction extends JosmAction {
     // This will be used to commit commands and unite them into one large command sequence at the end
     private LinkedList<Command> cmds = new LinkedList<Command>();
@@ -108,7 +109,7 @@ public class JoinAreasAction extends JosmAction {
     //HelperClass
     //saves a way and the "inside" side
     // insideToTheLeft: if true left side is "in", false -right side is "in". Left and right are determined along the orientation of way.
-    private static class WayInPolygon {
+    public static class WayInPolygon {
         public final Way way;
         public boolean insideToTheRight;
 
@@ -135,7 +136,7 @@ public class JoinAreasAction extends JosmAction {
      * @author viesturs
      *
      */
-    private static class AssembledPolygon {
+    public static class AssembledPolygon {
         public List<WayInPolygon> ways;
 
         public AssembledPolygon(List<WayInPolygon> boundary) {
@@ -161,7 +162,6 @@ public class JoinAreasAction extends JosmAction {
             return nodes;
         }
     }
-
 
     public static class AssembledMultipolygon {
         public AssembledPolygon outerWay;
@@ -207,7 +207,7 @@ public class JoinAreasAction extends JosmAction {
         }
 
         public WayInPolygon startNewWay() {
-            if (availableWays.size() == 0) {
+            if (availableWays.isEmpty()) {
                 lastWay = null;
             } else {
                 lastWay = availableWays.iterator().next();
@@ -245,7 +245,7 @@ public class JoinAreasAction extends JosmAction {
                     {
                         //this is the path we came from - ignore it.
                     }
-                    else if (bestWay == null || (isToTheRightSideOfLine(prevNode, headNode, bestWayNextNode, nextNode) == rightmost)) {
+                    else if (bestWay == null || (Geometry.isToTheRightSideOfLine(prevNode, headNode, bestWayNextNode, nextNode) == rightmost)) {
                         //the new way is better
                         bestWay = way;
                         bestWayReverse = false;
@@ -260,7 +260,7 @@ public class JoinAreasAction extends JosmAction {
                     if (nextNode.equals(prevNode)) {
                         //this is the path we came from - ignore it.
                     }
-                    else if (bestWay == null || (isToTheRightSideOfLine(prevNode, headNode, bestWayNextNode, nextNode) == rightmost)) {
+                    else if (bestWay == null || (Geometry.isToTheRightSideOfLine(prevNode, headNode, bestWayNextNode, nextNode) == rightmost)) {
                         //the new way is better
                         bestWay = way;
                         bestWayReverse = true;
@@ -288,7 +288,6 @@ public class JoinAreasAction extends JosmAction {
         }
     }
 
-
     /**
      * Helper storage class for finding findOuterWays
      * @author viesturs
@@ -302,7 +301,6 @@ public class JoinAreasAction extends JosmAction {
             level = _level;
         }
     }
-
 
     // Adds the menu entry, Shortcuts, etc.
     public JoinAreasAction() {
@@ -389,7 +387,6 @@ public class JoinAreasAction extends JosmAction {
         }
     }
 
-
     /**
      * Tests if the areas have some intersections to join.
      * @param areas
@@ -404,7 +401,7 @@ public class JoinAreasAction extends JosmAction {
         }
 
         //find intersection points
-        ArrayList<Node> nodes = addIntersections(allStartingWays, true, cmds);
+        ArrayList<Node> nodes = Geometry.addIntersections(allStartingWays, true, cmds);
         return nodes.size() > 0;
     }
 
@@ -440,10 +437,11 @@ public class JoinAreasAction extends JosmAction {
         }
 
         //find intersection points
-        ArrayList<Node> nodes = addIntersections(allStartingWays, false, cmds);
+        ArrayList<Node> nodes = Geometry.addIntersections(allStartingWays, false, cmds);
 
         //no intersections, return.
-        if (nodes.size() == 0) return result;
+        if (nodes.isEmpty())
+            return result;
         commitCommands(marktr("Added node on all intersections"));
 
         ArrayList<RelationRole> relations = new ArrayList<RelationRole>();
@@ -503,7 +501,6 @@ public class JoinAreasAction extends JosmAction {
             commitCommands(marktr("Delete Ways that are not part of an inner multipolygon"));
         }
 
-
         makeCommitsOneAction(marktr("Joined overlapping areas"));
 
         if (warnAboutRelations) {
@@ -537,10 +534,10 @@ public class JoinAreasAction extends JosmAction {
         //mostly copied from CombineWayAction.java.
         TagCollection wayTags = TagCollection.unionOfAllPrimitives(ways);
         TagCollection completeWayTags = new TagCollection(wayTags);
-        combineTigerTags(completeWayTags);
-        normalizeTagCollectionBeforeEditing(completeWayTags, ways);
+        TagConflictResolutionUtil.combineTigerTags(completeWayTags);
+        TagConflictResolutionUtil.normalizeTagCollectionBeforeEditing(completeWayTags, ways);
         TagCollection tagsToEdit = new TagCollection(completeWayTags);
-        completeTagCollectionForEditing(tagsToEdit);
+        TagConflictResolutionUtil.completeTagCollectionForEditing(tagsToEdit);
 
         CombinePrimitiveResolverDialog dialog = CombinePrimitiveResolverDialog.getInstance();
         dialog.getTagConflictResolverModel().populate(tagsToEdit, completeWayTags.getKeysWithMultipleValues());
@@ -569,7 +566,6 @@ public class JoinAreasAction extends JosmAction {
         commitCommands(marktr("Fix tag conflicts"));
         return true;
     }
-
 
     /**
      * This method removes duplicate points (if any) from the input way.
@@ -634,7 +630,6 @@ public class JoinAreasAction extends JosmAction {
         return totalNodesRemoved > 0;
     }
 
-
     /**
      * Commits the command list with a description
      * @param String The description of what the commands do
@@ -655,7 +650,6 @@ public class JoinAreasAction extends JosmAction {
         cmds.clear();
         cmdsCount++;
     }
-
 
     /**
      * This method analyzes the way and assigns each part what direction polygon "inside" is.
@@ -722,7 +716,7 @@ public class JoinAreasAction extends JosmAction {
                 if (way.firstNode().equals(headNode)) {
                     Node nextNode = way.getNode(1);
 
-                    if (topWay == null || !isToTheRightSideOfLine(prevNode, headNode, bestWayNextNode, nextNode)) {
+                    if (topWay == null || !Geometry.isToTheRightSideOfLine(prevNode, headNode, bestWayNextNode, nextNode)) {
                         //the new way is better
                         topWay = way;
                         wayClockwise = true;
@@ -734,7 +728,7 @@ public class JoinAreasAction extends JosmAction {
                     //end adjacent to headNode
                     Node nextNode = way.getNode(way.getNodesCount() - 2);
 
-                    if (topWay == null || !isToTheRightSideOfLine(prevNode, headNode, bestWayNextNode, nextNode)) {
+                    if (topWay == null || !Geometry.isToTheRightSideOfLine(prevNode, headNode, bestWayNextNode, nextNode)) {
                         //the new way is better
                         topWay = way;
                         wayClockwise = false;
@@ -748,7 +742,7 @@ public class JoinAreasAction extends JosmAction {
             Node next = topWay.getNode(topIndex + 1);
 
             //there will be no parallel segments in the middle of way, so all fine.
-            wayClockwise = angleIsClockwise(prev, topNode, next);
+            wayClockwise = Geometry.angleIsClockwise(prev, topNode, next);
         }
 
         Way curWay = topWay;
@@ -771,7 +765,6 @@ public class JoinAreasAction extends JosmAction {
                 //full loop traversed - all done.
                 break;
             }
-
 
             //find intersecting segments
             // the intersections will look like this:
@@ -809,8 +802,8 @@ public class JoinAreasAction extends JosmAction {
                     Node wayANode = wayA.getNode(wayA.getNodesCount() - 2);
                     Node wayBNode = wayB.getNode(1);
 
-                    boolean wayAToTheRight = isToTheRightSideOfLine(prevNode, headNode, nextNode, wayANode);
-                    boolean wayBToTheRight = isToTheRightSideOfLine(prevNode, headNode, nextNode, wayBNode);
+                    boolean wayAToTheRight = Geometry.isToTheRightSideOfLine(prevNode, headNode, nextNode, wayANode);
+                    boolean wayBToTheRight = Geometry.isToTheRightSideOfLine(prevNode, headNode, nextNode, wayBNode);
 
                     if (wayAToTheRight != wayBToTheRight) {
                         intersectionCount ++;
@@ -856,9 +849,9 @@ public class JoinAreasAction extends JosmAction {
         return result;
     }
 
-
     /**
-     * Simple chunking version. Does not care about circular ways and result being proper, we will glue it all back together later on.
+     * Simple chunking version. Does not care about circular ways and result being
+     * proper, we will glue it all back together later on.
      * @param way the way to chunk
      * @param splitNodes the places where to cut.
      * @return list of node paths to produce.
@@ -958,8 +951,6 @@ public class JoinAreasAction extends JosmAction {
         return result;
     }
 
-
-
     /**
      * Finds all ways that form inner or outer boundaries.
      * @param Collection<Way> A list of (splitted) ways that form a multigon and share common end nodes on intersections.
@@ -1057,7 +1048,6 @@ public class JoinAreasAction extends JosmAction {
         return result;
     }
 
-
     /**
      * This method checks if polygons have several touching parts and splits them in several polygons.
      * @param polygon the polygon to process.
@@ -1096,44 +1086,6 @@ public class JoinAreasAction extends JosmAction {
         return newPolygons;
     }
 
-
-    /**
-     * Tests if given point is to the right side of path consisting of 3 points.
-     * @param lineP1 first point in path
-     * @param lineP2 second point in path
-     * @param lineP3 third point in path
-     * @param testPoint
-     * @return true if to the right side, false otherwise
-     */
-    public static boolean isToTheRightSideOfLine(Node lineP1, Node lineP2, Node lineP3, Node testPoint) {
-        boolean pathBendToRight = angleIsClockwise(lineP1, lineP2, lineP3);
-        boolean rightOfSeg1 = angleIsClockwise(lineP1, lineP2, testPoint);
-        boolean rightOfSeg2 = angleIsClockwise(lineP2, lineP3, testPoint);
-
-        if (pathBendToRight)
-            return rightOfSeg1 && rightOfSeg2;
-        else
-            return !(!rightOfSeg1 && !rightOfSeg2);
-    }
-
-    /**
-     * This method tests if secondNode is clockwise to first node.
-     * @param commonNode starting point for both vectors
-     * @param firstNode first vector end node
-     * @param secondNode second vector end node
-     * @return true if first vector is clockwise before second vector.
-     */
-
-    public static boolean angleIsClockwise(Node commonNode, Node firstNode, Node secondNode) {
-        double dy1 = (firstNode.getEastNorth().getY() - commonNode.getEastNorth().getY());
-        double dy2 = (secondNode.getEastNorth().getY() - commonNode.getEastNorth().getY());
-        double dx1 = (firstNode.getEastNorth().getX() - commonNode.getEastNorth().getX());
-        double dx2 = (secondNode.getEastNorth().getX() - commonNode.getEastNorth().getX());
-
-        return dy1 * dx2 - dx1 * dy2 > 0;
-    }
-
-
     /**
      * Tests if way is inside other way
      * @param outside
@@ -1147,59 +1099,12 @@ public class JoinAreasAction extends JosmAction {
 
             if (!outsideNodes.contains(insideNode))
                 //simply test the one node
-                return nodeInsidePolygon(insideNode, outside.getNodes());
+                return Geometry.nodeInsidePolygon(insideNode, outside.getNodes());
         }
 
         //all nodes shared.
         return false;
     }
-
-    /**
-     * Tests if point is inside a polygon. The polygon can be self-intersecting. In such case the contains function works in xor-like manner.
-     * @param polygonNodes list of nodes from polygon path.
-     * @param point the point to test
-     * @return true if the point is inside polygon.
-     * FIXME: this should probably be moved to tools..
-     */
-    public static boolean nodeInsidePolygon(Node point, List<Node> polygonNodes) {
-        if (polygonNodes.size() < 3)
-            return false;
-
-        boolean inside = false;
-        Node p1, p2;
-
-        //iterate each side of the polygon, start with the last segment
-        Node oldPoint = polygonNodes.get(polygonNodes.size() - 1);
-
-        for (Node newPoint : polygonNodes) {
-            //skip duplicate points
-            if (newPoint.equals(oldPoint)) {
-                continue;
-            }
-
-            //order points so p1.lat <= p2.lat;
-            if (newPoint.getEastNorth().getY() > oldPoint.getEastNorth().getY()) {
-                p1 = oldPoint;
-                p2 = newPoint;
-            } else {
-                p1 = newPoint;
-                p2 = oldPoint;
-            }
-
-            //test if the line is crossed and if so invert the inside flag.
-            if ((newPoint.getEastNorth().getY() < point.getEastNorth().getY()) == (point.getEastNorth().getY() <= oldPoint.getEastNorth().getY())
-                    && (point.getEastNorth().getX() - p1.getEastNorth().getX()) * (p2.getEastNorth().getY() - p1.getEastNorth().getY())
-                    < (p2.getEastNorth().getX() - p1.getEastNorth().getX()) * (point.getEastNorth().getY() - p1.getEastNorth().getY()))
-            {
-                inside = !inside;
-            }
-
-            oldPoint = newPoint;
-        }
-
-        return inside;
-    }
-
 
     /**
      * Joins the lists of ways.
@@ -1215,7 +1120,6 @@ public class JoinAreasAction extends JosmAction {
 
         return result;
     }
-
 
     /**
      * Joins the outer ways and deletes all short ways that can't be part of a multipolygon anyway.
@@ -1244,7 +1148,6 @@ public class JoinAreasAction extends JosmAction {
 
         return joinedWay;
     }
-
 
     /**
      * Joins a list of ways (using CombineWayAction and ReverseWayAction as specified in WayInPath)
@@ -1278,7 +1181,6 @@ public class JoinAreasAction extends JosmAction {
 
         return result.a;
     }
-
 
     /**
      * This method analyzes multipolygon relationships of given ways and collects addition inner ways to consider.
@@ -1376,7 +1278,6 @@ public class JoinAreasAction extends JosmAction {
         return result;
     }
 
-
     /**
      * This method filters the list of relations that form the multipolygons.
      * @param relations
@@ -1400,7 +1301,6 @@ public class JoinAreasAction extends JosmAction {
         return result;
     }
 
-
     /**
      * Will add own multipolygon relation to the "previously existing" relations. Fixup is done by fixRelations
      * @param Collection<Way> List of already closed inner ways
@@ -1421,7 +1321,6 @@ public class JoinAreasAction extends JosmAction {
         // which will then do the remaining work.
         return new RelationRole(newRel, "outer");
     }
-
 
     /**
      * Removes a given OsmPrimitive from all relations
@@ -1457,7 +1356,6 @@ public class JoinAreasAction extends JosmAction {
         commitCommands(marktr("Removed Element from Relations"));
         return result;
     }
-
 
     /**
      * Adds the previously removed relations again to the outer way. If there are multiple multipolygon
