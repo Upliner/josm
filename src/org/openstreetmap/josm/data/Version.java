@@ -66,6 +66,8 @@ public class Version {
 
     private int version;
     private String revision;
+    private String gitRevision;
+    private String gitBranch;
     private String time;
     private boolean isLocalBuild;
 
@@ -130,6 +132,10 @@ public class Version {
             isLocalBuild = true;
         }
 
+        // Git revision info
+        gitRevision = properties.get("Git-Revision").trim();
+        gitBranch = properties.get("Git-Branch").trim();
+
         // the revision info
         //
         StringBuffer sb = new StringBuffer();
@@ -152,13 +158,25 @@ public class Version {
     }
 
     /**
-     * Replies the version string. Either the SVN revision "1234" (as string) or the
-     * the I18n equivalent of "UNKNOWN".
+     * Replies the version string. Includes SVN and Git revisions.
      *
      * @return the JOSM version
      */
     public String getVersionString() {
-        return  version == 0 ? tr("UNKNOWN") : Integer.toString(version);
+        int v = getVersion();
+        String s = (v == JOSM_UNKNOWN_VERSION) ? "UNKNOWN" : Integer.toString(v);
+        if (gitRevision != null || gitBranch != null) {
+            s += " git";
+            if (gitRevision != null) {
+                s += "-" + gitRevision;
+            }
+            if (gitBranch != null) {
+                s += " " + gitBranch;
+            }
+        } else if (isLocalBuild() && v != JOSM_UNKNOWN_VERSION) {
+            s += " SVN";
+        }
+        return s;
     }
 
     /**
@@ -167,7 +185,7 @@ public class Version {
      * @return a text with the release attributes
      */
     public String getReleaseAttributes() {
-        return revision;
+        return revision + getAgentString();
     }
 
     /**
@@ -197,11 +215,6 @@ public class Version {
     }
 
     public String getAgentString() {
-        int v = getVersion();
-        String s = (v == JOSM_UNKNOWN_VERSION) ? "UNKNOWN" : Integer.toString(v);
-        if (isLocalBuild() && v != JOSM_UNKNOWN_VERSION) {
-            s += " SVN";
-        }
-        return "JOSM/1.5 ("+ s+" "+LanguageInfo.getJOSMLocaleCode()+")";
+        return "JOSM/1.5 ("+getVersionString()+" "+LanguageInfo.getJOSMLocaleCode()+")";
     }
 }
