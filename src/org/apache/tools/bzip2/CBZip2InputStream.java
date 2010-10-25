@@ -41,7 +41,7 @@ import java.io.InputStream;
  * source stream via the single byte {@link java.io.InputStream#read()
  * read()} method exclusively. Thus you should consider to use a
  * buffered source stream.</p>
- * 
+ *
  * <p>Instances of this class are not threadsafe.</p>
  */
 public class CBZip2InputStream extends InputStream implements BZip2Constants {

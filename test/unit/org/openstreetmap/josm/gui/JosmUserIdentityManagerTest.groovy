@@ -23,7 +23,7 @@ class JosmUserIdentityManagerTest {
 	@Test
 	public void test_SingletonAccess() {
 		
-		JosmUserIdentityManager im = JosmUserIdentityManager.getInstance()		
+		JosmUserIdentityManager im = JosmUserIdentityManager.getInstance()
 
 		// created ?
 		assert im != null
@@ -34,7 +34,7 @@ class JosmUserIdentityManagerTest {
 		JosmUserIdentityManager im2 = JosmUserIdentityManager.getInstance()
 
 		// only one instance
-		assert im == im2		
+		assert im == im2
 	}
 	
 	@Test

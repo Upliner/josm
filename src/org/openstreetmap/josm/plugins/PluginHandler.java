@@ -392,8 +392,9 @@ public class PluginHandler {
         }  catch (Throwable e) {
             e.printStackTrace();
         }
-        if(msg != null && confirmDisablePlugin(parent, msg, plugin.name))
+        if(msg != null && confirmDisablePlugin(parent, msg, plugin.name)) {
             Main.pref.removeFromCollection("plugins", plugin.name);
+        }
     }
 
     /**
@@ -617,8 +618,8 @@ public class PluginHandler {
      * @throws IllegalArgumentException thrown if plugins is null
      */
     public static List<PluginInformation>  updatePlugins(Window parent,
-    List<PluginInformation> plugins, ProgressMonitor monitor)
-    throws IllegalArgumentException{
+            List<PluginInformation> plugins, ProgressMonitor monitor)
+            throws IllegalArgumentException{
         CheckParameterUtil.ensureParameterNotNull(plugins, "plugins");
         if (monitor == null) {
             monitor = NullProgressMonitor.INSTANCE;
@@ -911,11 +912,12 @@ public class PluginHandler {
             PluginInformation pi = pp.getPluginInformation();
             pl.remove(pi.name);
             pl.add(pi.name + " (" + (pi.localversion != null && !pi.localversion.equals("")
-            ? pi.localversion : "unknown") + ")");
+                    ? pi.localversion : "unknown") + ")");
         }
         Collections.sort(pl);
-        for (String s : pl)
+        for (String s : pl) {
             text += "Plugin: " + s + "\n";
+        }
         return text;
     }
 

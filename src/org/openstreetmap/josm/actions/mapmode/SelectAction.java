@@ -279,7 +279,7 @@ public class SelectAction extends MapMode implements SelectionEnded {
      * Calculate a virtual node if there is enough visual space to draw a crosshair
      * node and the middle of a way segment is clicked.  If the user drags the
      * crosshair node, it will be added to all ways in <code>virtualWays</code>.
-     * 
+     *
      * @param e contains the point clicked
      * @return whether <code>virtualNode</code> and <code>virtualWays</code> were setup.
      */
@@ -332,7 +332,7 @@ public class SelectAction extends MapMode implements SelectionEnded {
     private OsmPrimitive cycleStart = null;
 
     /**
-     * 
+     *
      * @param osm nearest primitive found by simple method
      * @param e
      * @return

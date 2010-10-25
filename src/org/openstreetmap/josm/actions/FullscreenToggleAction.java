@@ -92,7 +92,7 @@ public class FullscreenToggleAction extends JosmAction {
             prevBounds = frame.getBounds();
             frame.setBounds(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
         }
-        
+
         // we cannot use hw-exclusive fullscreen mode in MS-Win, as long
         // as josm throws out modal dialogs, see here:
         // http://forums.sun.com/thread.jspa?threadID=5351882

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,10 +22,10 @@ import org.apache.commons.codec.StringEncoder;
 
 /**
  * Encodes a string into a Caverphone value.
- * 
+ *
  * This is an algorithm created the Caversham Project at the University of Otago. It implements the Caverphone 2.0
  * algorithm:
- * 
+ *
  * @author Apache Software Foundation
  * @version $Id: Caverphone.java 797690 2009-07-24 23:28:35Z ggregory $
  * @see <a href="http://en.wikipedia.org/wiki/Caverphone">Wikipedia - Caverphone</a>
@@ -42,13 +42,13 @@ public class Caverphone implements StringEncoder {
     }
 
     /**
-     * Find the caverphone value of a String. 
+     * Find the caverphone value of a String.
      *
      * @param txt String to find the caverphone code for
      * @return A caverphone code corresponding to the String supplied
      */
     public String caverphone(String txt) {
-        // NOTE: Version 1.0 of Caverphone is easily derivable from this code 
+        // NOTE: Version 1.0 of Caverphone is easily derivable from this code
         // by commenting out the 2.0 lines and adding in the 1.0 lines
 
         if( txt == null || txt.length() == 0 ) {
@@ -146,26 +146,26 @@ public class Caverphone implements StringEncoder {
      * supplied object is not of type java.lang.String.
      *
      * @param pObject Object to encode
-     * @return An object (or type java.lang.String) containing the 
+     * @return An object (or type java.lang.String) containing the
      *         caverphone code which corresponds to the String supplied.
      * @throws EncoderException if the parameter supplied is not
      *                          of type java.lang.String
      */
     public Object encode(Object pObject) throws EncoderException {
         if (!(pObject instanceof String)) {
-            throw new EncoderException("Parameter supplied to Caverphone encode is not of type java.lang.String"); 
+            throw new EncoderException("Parameter supplied to Caverphone encode is not of type java.lang.String");
         }
         return caverphone((String) pObject);
     }
 
     /**
-     * Encodes a String using the Caverphone algorithm. 
+     * Encodes a String using the Caverphone algorithm.
      *
      * @param pString String object to encode
      * @return The caverphone code corresponding to the String supplied
      */
     public String encode(String pString) {
-        return caverphone(pString);   
+        return caverphone(pString);
     }
 
     /**
@@ -173,7 +173,7 @@ public class Caverphone implements StringEncoder {
      *
      * @param str1 First of two strings to compare
      * @param str2 Second of two strings to compare
-     * @return <code>true</code> if the caverphones of these strings are identical, 
+     * @return <code>true</code> if the caverphones of these strings are identical,
      *        <code>false</code> otherwise.
      */
     public boolean isCaverphoneEqual(String str1, String str2) {

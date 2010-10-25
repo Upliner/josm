@@ -605,7 +605,7 @@ public class Preferences {
         }
         return put(key, s);
     }
-    
+
     synchronized private void putCollectionDefault(String key, Collection<String> val) {
         String s = null;
         for(String a : val)
@@ -618,7 +618,7 @@ public class Preferences {
         }
         putDefault(key, s);
     }
-    
+
     synchronized public Collection<Collection<String>> getArray(String key,
     Collection<Collection<String>> def) {
         if(def != null)
@@ -631,7 +631,7 @@ public class Preferences {
         }
         return num == 0 && def != null ? def : col;
     }
-    
+
     synchronized public boolean putArray(String key, Collection<Collection<String>> val) {
         boolean changed = false;
         key += ".";

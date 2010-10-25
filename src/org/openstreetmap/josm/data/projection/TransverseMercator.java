@@ -9,7 +9,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
  *
  * @author Dirk Stöcker
  * code based on JavaScript from Chuck Taylor
- * 
+ *
  * NOTE: Uses polygon approximation to translate to WGS84.
  */
 public abstract class TransverseMercator implements Projection {

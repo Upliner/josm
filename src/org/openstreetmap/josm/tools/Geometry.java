@@ -221,7 +221,7 @@ public class Geometry {
                 (a2*c1 -a1*c2)/det
         ));
     }
-    
+
     /**
      * Tests if given point is to the right side of path consisting of 3 points.
      * @param lineP1 first point in path

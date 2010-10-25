@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,10 +24,10 @@ import org.apache.commons.codec.EncoderException;
 
 /**
  * Translates between byte arrays and strings of "0"s and "1"s.
- * 
- * TODO: may want to add more bit vector functions like and/or/xor/nand 
+ *
+ * TODO: may want to add more bit vector functions like and/or/xor/nand
  * TODO: also might be good to generate boolean[] from byte[] et. cetera.
- * 
+ *
  * @author Apache Software Foundation
  * @since 1.3
  * @version $Id: BinaryCodec.java 798433 2009-07-28 07:53:10Z ggregory $
@@ -71,7 +71,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
 
     /**
      * Converts an array of raw binary data into an array of ASCII 0 and 1 characters.
-     * 
+     *
      * @param raw
      *                  the raw binary data to convert
      * @return 0 and 1 ASCII character bytes one for each bit of the argument
@@ -83,7 +83,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
 
     /**
      * Converts an array of raw binary data into an array of ASCII 0 and 1 chars.
-     * 
+     *
      * @param raw
      *                  the raw binary data to convert
      * @return 0 and 1 ASCII character chars one for each bit of the argument
@@ -100,7 +100,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
 
     /**
      * Decodes a byte array where each byte represents an ASCII '0' or '1'.
-     * 
+     *
      * @param ascii
      *                  each byte represents an ASCII '0' or '1'
      * @return the raw encoded binary where each bit corresponds to a byte in the byte array argument
@@ -126,7 +126,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
 
     /**
      * Decodes a byte array where each byte represents an ASCII '0' or '1'.
-     * 
+     *
      * @param ascii
      *                  each byte represents an ASCII '0' or '1'
      * @return the raw encoded binary where each bit corresponds to a byte in the byte array argument
@@ -138,7 +138,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
 
     /**
      * Decodes a String where each char of the String represents an ASCII '0' or '1'.
-     * 
+     *
      * @param ascii
      *                  String of '0' and '1' characters
      * @return the raw encoded binary where each bit corresponds to a byte in the byte array argument
@@ -158,7 +158,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
     // ------------------------------------------------------------------------
     /**
      * Decodes a char array where each char represents an ASCII '0' or '1'.
-     * 
+     *
      * @param ascii
      *                  each char represents an ASCII '0' or '1'
      * @return the raw encoded binary where each bit corresponds to a char in the char array argument
@@ -185,7 +185,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
 
     /**
      * Decodes a byte array where each byte represents an ASCII '0' or '1'.
-     * 
+     *
      * @param ascii
      *                  each byte represents an ASCII '0' or '1'
      * @return the raw encoded binary where each bit corresponds to a byte in the byte array argument
@@ -212,7 +212,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
 
     /**
      * Returns <code>true</code> if the given array is <code>null</code> or empty (size 0.)
-     * 
+     *
      * @param array
      *            the source array
      * @return <code>true</code> if the given array is <code>null</code> or empty (size 0.)
@@ -224,7 +224,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
     /**
      * Converts an array of raw binary data into an array of ASCII 0 and 1 character bytes - each byte is a truncated
      * char.
-     * 
+     *
      * @param raw
      *                  the raw binary data to convert
      * @return an array of 0 and 1 character bytes for each bit of the argument
@@ -254,7 +254,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
 
     /**
      * Converts an array of raw binary data into an array of ASCII 0 and 1 characters.
-     * 
+     *
      * @param raw
      *                  the raw binary data to convert
      * @return an array of 0 and 1 characters for each bit of the argument
@@ -284,7 +284,7 @@ public class BinaryCodec implements BinaryDecoder, BinaryEncoder {
 
     /**
      * Converts an array of raw binary data into a String of ASCII 0 and 1 characters.
-     * 
+     *
      * @param raw
      *                  the raw binary data to convert
      * @return a String of 0 and 1 characters representing the binary data

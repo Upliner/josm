@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ import java.io.OutputStream;
  * Since this class operates directly on byte streams, and not character streams, it is hard-coded to only encode/decode
  * character encodings which are compatible with the lower 127 ASCII chart (ISO-8859-1, Windows-1252, UTF-8, etc).
  * </p>
- * 
+ *
  * @author Apache Software Foundation
  * @version $Id: Base64OutputStream.java 928107 2010-03-27 00:02:22Z sebb $
  * @see <a href="http://www.ietf.org/rfc/rfc2045.txt">RFC 2045</a>
@@ -52,7 +52,7 @@ public class Base64OutputStream extends FilterOutputStream {
 
     /**
      * Creates a Base64OutputStream such that all data written is Base64-encoded to the original provided OutputStream.
-     * 
+     *
      * @param out
      *            OutputStream to wrap.
      */
@@ -63,7 +63,7 @@ public class Base64OutputStream extends FilterOutputStream {
     /**
      * Creates a Base64OutputStream such that all data written is either Base64-encoded or Base64-decoded to the
      * original provided OutputStream.
-     * 
+     *
      * @param out
      *            OutputStream to wrap.
      * @param doEncode
@@ -78,7 +78,7 @@ public class Base64OutputStream extends FilterOutputStream {
     /**
      * Creates a Base64OutputStream such that all data written is either Base64-encoded or Base64-decoded to the
      * original provided OutputStream.
-     * 
+     *
      * @param out
      *            OutputStream to wrap.
      * @param doEncode
@@ -99,7 +99,7 @@ public class Base64OutputStream extends FilterOutputStream {
 
     /**
      * Writes the specified <code>byte</code> to this output stream.
-     * 
+     *
      * @param i
      *            source byte
      * @throws IOException
@@ -113,14 +113,14 @@ public class Base64OutputStream extends FilterOutputStream {
     /**
      * Writes <code>len</code> bytes from the specified <code>b</code> array starting at <code>offset</code> to this
      * output stream.
-     * 
+     *
      * @param b
      *            source byte array
      * @param offset
      *            where to start reading the bytes
      * @param len
      *            maximum number of bytes to write
-     * 
+     *
      * @throws IOException
      *             if an I/O error occurs.
      * @throws NullPointerException
@@ -148,7 +148,7 @@ public class Base64OutputStream extends FilterOutputStream {
     /**
      * Flushes this output stream and forces any buffered output bytes to be written out to the stream. If propogate is
      * true, the wrapped stream will also be flushed.
-     * 
+     *
      * @param propogate
      *            boolean flag to indicate whether the wrapped OutputStream should also be flushed.
      * @throws IOException
@@ -170,7 +170,7 @@ public class Base64OutputStream extends FilterOutputStream {
 
     /**
      * Flushes this output stream and forces any buffered output bytes to be written out to the stream.
-     * 
+     *
      * @throws IOException
      *             if an I/O error occurs.
      */
@@ -180,7 +180,7 @@ public class Base64OutputStream extends FilterOutputStream {
 
     /**
      * Closes this output stream and releases any system resources associated with the stream.
-     * 
+     *
      * @throws IOException
      *             if an I/O error occurs.
      */
