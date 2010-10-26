@@ -180,12 +180,21 @@ public class Version {
     }
 
     /**
+     * Replies current SVN and Git versions or localized "UNKNOWN" string.
+     *
+     * @return the JOSM version
+     */
+    public String getLocalizedVersionString() {
+        return (getVersion() == JOSM_UNKNOWN_VERSION) ? tr("UNKNOWN") : getVersionString();
+    }
+
+    /**
      * Replies a text with the release attributes
      *
      * @return a text with the release attributes
      */
     public String getReleaseAttributes() {
-        return revision + getAgentString();
+        return revision;
     }
 
     /**

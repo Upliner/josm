@@ -61,7 +61,7 @@ public class AboutAction extends JosmAction {
         caption.setFont(new Font("Helvetica", Font.BOLD, 20));
         info.add(caption, GBC.eol().fill(GBC.HORIZONTAL).insets(10,0,0,0));
         info.add(GBC.glue(0,10), GBC.eol());
-        info.add(new JLabel(tr("Version {0}", version.getVersionString())), GBC.eol().fill(GBC.HORIZONTAL).insets(10,0,0,0));
+        info.add(new JLabel(tr("Version {0}", version.getLocalizedVersionString())), GBC.eol().fill(GBC.HORIZONTAL).insets(10,0,0,0));
         info.add(GBC.glue(0,5), GBC.eol());
         info.add(new JLabel(tr("Last change at {0}",version.getTime())), GBC.eol().fill(GBC.HORIZONTAL).insets(10,0,0,0));
         info.add(GBC.glue(0,5), GBC.eol());

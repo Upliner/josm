@@ -65,7 +65,7 @@ public class SplashScreen extends JFrame {
         innerContentPane.add(caption, gbc);
 
         // Add the version number
-        JLabel version = new JLabel(tr("Version {0}", Version.getInstance().getVersionString()));
+        JLabel version = new JLabel(tr("Version {0}", Version.getInstance().getLocalizedVersionString()));
         gbc.gridy = 1;
         gbc.insets = new Insets(0, 0, 0, 0);
         innerContentPane.add(version, gbc);

@@ -5,6 +5,8 @@ SVN_VERSION=$(git merge-base HEAD master | git cat-file --batch | grep -o ^git-s
 GIT_REVISION=$(git rev-parse HEAD | head -c 7)
 GIT_BRANCH=$(git name-rev --name-only HEAD)
 
+test -z $GIT_REVISION || git update-index -q --refresh && test -z "$(git diff-index --name-only HEAD --)" || GIT_REVISION="$GIT_REVISION-dirty"
+
 test -z $SVN_VERSION || echo Revision: $SVN_VERSION
 test -z $GIT_REVISION || echo Git-Revision: $GIT_REVISION
 test -z $GIT_BRANCH || echo Git-Branch: $GIT_BRANCH

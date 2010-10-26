@@ -55,7 +55,7 @@ Build-Date: ${build.tstamp}
 		<exec append="true" output="${revision.dir}/REVISION" executable="sh" failifexecutionfails="false" resultproperty="gitresult">
 			<arg value="git-revision.sh"/>
 		</exec>
-		<condition property="gitfail"><equals arg1="${gitresult}" arg2="1" /></condition>
+		<condition property="gitfail"><not><equals arg1="${gitresult}" arg2="0" /></not></condition>
 		<antcall target="svn-revision" />
 	</target>
 	<target name="svn-revision" if="gitfail">
