@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="test/unit"/>
-	<classpathentry kind="src" path="test/functional"/>
-	<classpathentry excluding="*/.svn/|.git/|.svn/|.settings/|build/|data_nodist/|dist/|doc/|lib/|macosx/|src/|test/|test/build/|test/functional/|test/performance/|test/unit/|tools/|utils/" kind="src" path=""/>
-	<classpathentry kind="src" path="test/performance"/>
+	<classpathentry excluding="**/.svn/" kind="src" path="src"/>
+	<classpathentry excluding="**/.svn/" kind="src" path="test/unit"/>
+	<classpathentry excluding="**/.svn/" kind="src" path="test/functional"/>
+	<classpathentry excluding="**/.svn/" kind="src" path="test/performance"/>
+	<classpathentry excluding="**/.svn/" including="CONTRIBUTION|LICENSE|README|REVISION|data/|images/" kind="src" path=""/>
 	<classpathentry kind="lib" path="lib/metadata-extractor-2.3.1-nosun.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="test/lib/fest/debug-1.0.jar"/>
