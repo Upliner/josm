@@ -158,13 +158,21 @@ public class Version {
     }
 
     /**
+     * Replies the version string. Includes only SVN revision.
+     *
+     * @return the JOSM SVN revision or "UNKNOWN"
+     */
+    public String getShortVersionString() {
+        return (getVersion() == JOSM_UNKNOWN_VERSION) ? "UNKNOWN" : Integer.toString(getVersion());
+    }
+
+    /**
      * Replies the version string. Includes SVN and Git revisions.
      *
      * @return the JOSM version
      */
     public String getVersionString() {
-        int v = getVersion();
-        String s = (v == JOSM_UNKNOWN_VERSION) ? "UNKNOWN" : Integer.toString(v);
+        String s = getShortVersionString();
         if (gitRevision != null || gitBranch != null) {
             s += " git";
             if (gitRevision != null) {
@@ -173,7 +181,7 @@ public class Version {
             if (gitBranch != null) {
                 s += " " + gitBranch;
             }
-        } else if (isLocalBuild() && v != JOSM_UNKNOWN_VERSION) {
+        } else if (isLocalBuild() && getVersion() != JOSM_UNKNOWN_VERSION) {
             s += " SVN";
         }
         return s;
@@ -225,5 +233,14 @@ public class Version {
 
     public String getAgentString() {
         return "JOSM/1.5 ("+getVersionString()+" "+LanguageInfo.getJOSMLocaleCode()+")";
+    }
+
+    /**
+     * Return user agent string that is used for requests to JOSM trac.
+     * 
+     * Used to avoid complaining about "strange version"
+     */
+    public String getShortAgentString() {
+        return "JOSM/1.5 ("+getShortVersionString()+" "+LanguageInfo.getJOSMLocaleCode()+")";
     }
 }

@@ -7,9 +7,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.Version;
 
 /**
  * Read a trac-wiki page.
@@ -50,7 +52,9 @@ public class WikiReader {
         String res = "";
         InputStream in = null;
         try {
-            in = new URL(url).openStream();
+            HttpURLConnection connection = (HttpURLConnection)new URL(url).openConnection();
+            connection.setRequestProperty("User-Agent", Version.getInstance().getShortAgentString());
+            in = connection.getInputStream();
             res = readFromTrac(new BufferedReader(new InputStreamReader(in, "utf-8")));
         } catch (IOException ioe) {
             System.out.println(tr("Warning: failed to read MOTD from ''{0}''. Exception was: {1}", url, ioe
@@ -141,7 +145,7 @@ public class WikiReader {
             }
         }
         if (b.indexOf("      Describe ") >= 0
-        || b.indexOf(" does not exist. You can create it here.</p>") >= 0)
+                || b.indexOf(" does not exist. You can create it here.</p>") >= 0)
             return "";
         return "<html>" + b + "</html>";
     }
