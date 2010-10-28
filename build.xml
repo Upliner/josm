@@ -54,37 +54,36 @@ Build-Date: ${build.tstamp}
 </echo>
 		<exec append="true" output="${revision.dir}/REVISION" executable="sh" failifexecutionfails="false" resultproperty="gitresult">
 			<arg value="git-revision.sh"/>
+			<arg value="REVISION.properties"/>
 		</exec>
+		<property file="REVISION.properties" prefix="version"/>
+		<delete file="REVISION.properties" />
+		<property name="version.git.revision" value="None"/>
+		<property name="version.git.branch" value="None"/>
 		<condition property="gitfail"><not><equals arg1="${gitresult}" arg2="0" /></not></condition>
-		<antcall target="svn-revision" />
 	</target>
-	<target name="svn-revision" if="gitfail">
+
+	<target name="svn-revision" depends="create-revision" if="gitfail">
+		<echo>Git revision check failed. Falling back to SVN.</echo>
 		<exec append="false" output="REVISION.XML" executable="svn" failifexecutionfails="false">
 			<env key="LANG" value="C"/>
 			<arg value="info"/>
 			<arg value="--xml"/>
 			<arg value="."/>
 		</exec>
-		<xmlproperty file="REVISION.XML" prefix="version" keepRoot="false" collapseAttributes="true"/>
+		<xmlproperty file="REVISION.XML" prefix="svninfo" keepRoot="false" collapseAttributes="true"/>
 		<delete file="REVISION.XML" />
-		<property name="version.entry.commit.revision" value="UNKNOWN"/>
-		<echo append="true" file="${revision.dir}/REVISION">Revision: ${version.entry.commit.revision}</echo>
+		<property name="svninfo.entry.commit.revision" value="UNKNOWN"/>
+		<property name="svninfo.entry.commit.date" value="UNKNOWN"/>
+		<property name="version.svn.revision" value="${svninfo.entry.commit.revision}"/>
+		<echo append="true" file="${revision.dir}/REVISION">Revision: ${version.svn.revision}</echo>
 	</target>
 
-
-	<target name="dist" depends="compile,create-revision">
-
-		<exec append="false" output="REVISION" executable="svn" failifexecutionfails="false">
-			<env key="LANG" value="C"/>
-			<arg value="info"/>
-			<arg value="--xml"/>
-			<arg value="http://josm.openstreetmap.de/svn/trunk"/>
-		</exec>
-		<xmlproperty file="REVISION" prefix="version" keepRoot="false" collapseAttributes="true"/>
-		<delete file="REVISION"/>
-		<property name="version.entry.commit.revision" value="UNKNOWN"/>
-		<property name="version.entry.commit.date" value="UNKNOWN"/>
-		<echo>Revision ${version.entry.commit.revision}</echo>
+	<target name="dist" depends="compile,create-revision,svn-revision">
+		<property name="version.svn.revision" value="UNKNOWN"/>
+		<echo>SVN Revision: ${version.svn.revision}</echo>
+		<echo>Git Revision: ${version.git.revision}</echo>
+		<echo>Git Branch: ${version.git.branch}</echo>
 		<copy file="CONTRIBUTION" todir="build"/>
 		<copy file="README" todir="build"/>
 		<copy file="LICENSE" todir="build"/>
@@ -98,8 +97,6 @@ Build-Date: ${build.tstamp}
 			<!-- add attribute excludes="**/*BZip2*,**/*Bzip2*" to create a non-bzip2 supporting jar -->
 			<manifest>
 				<attribute name="Main-class" value="JOSM" />
-				<attribute name="Main-Version" value="${version.entry.commit.revision} SVN"/>
-				<attribute name="Main-Date" value="${version.entry.commit.date}"/>
 			</manifest>
 			<zipfileset dir="images" prefix="images" />
 			<zipfileset dir="data" prefix="data" />
@@ -113,7 +110,7 @@ Build-Date: ${build.tstamp}
 	<target name="distmac" depends="dist">
 		<!-- modify MacOS X Info.plist file to hold the SVN version number -->
 		<copy file="macosx/JOSM.app/Contents/Info.plist" todir="build"/>
-		<replace file="build/Info.plist" token="@SVNVersion@" value="${version.entry.commit.revision}"/>
+		<replace file="build/Info.plist" token="@SVNVersion@" value="${version.svn.revision}"/>
 		<!-- create ZIP file with MacOS X application bundle -->
 		<zip destfile="dist/josm-custom-macosx.zip" update="true">
 			<zipfileset dir="build" includes="CONTRIBUTION README LICENSE"/>
