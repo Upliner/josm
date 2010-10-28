@@ -23,8 +23,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Future;
 
 import javax.swing.AbstractAction;
@@ -242,6 +245,7 @@ public class GpxLayer extends Layer {
                 new CustomizeLineDrawing(),
                 new ImportImages(),
                 new ImportAudio(),
+                new SplitLayerAction(),
                 new MarkersFromNamedPoins(),
                 new ConvertToDataLayerAction(),
                 new DownloadAlongTrackAction(),
@@ -1329,6 +1333,37 @@ public class GpxLayer extends Layer {
                 Main.main.addLayer(ml);
             }
 
+        }
+    }
+
+    private class SplitLayerAction extends AbstractAction {
+
+        public SplitLayerAction() {
+            super(tr("Split GPX layer"), ImageProvider.get("addmarkers"));
+            putValue("help", "Action/SplitGPXLayer");
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            Map<String,GpxData> tracks = new HashMap<String,GpxData>();
+            for (GpxTrack track : data.tracks) {
+                Object nameObj = track.getAttributes().get("name");
+                String name;
+                if (nameObj == null) {
+                    name = tr("Anonymous tracks");
+                } else {
+                    name = nameObj.toString();
+                }
+                GpxData d = tracks.get(name);
+                if (d == null) {
+                    d = new GpxData();
+                    tracks.put(name, d);
+                }
+                d.tracks.add(track);
+            }
+            Main.main.removeLayer(GpxLayer.this);
+            for (Entry<String,GpxData> entry : tracks.entrySet()) {
+                Main.main.addLayer(new GpxLayer(entry.getValue(),entry.getKey(),false));
+            }
         }
     }
 
