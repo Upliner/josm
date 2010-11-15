@@ -16,7 +16,6 @@ import javax.swing.KeyStroke;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.AboutAction;
-import org.openstreetmap.josm.actions.AddIntersectionsAction;
 import org.openstreetmap.josm.actions.AddNodeAction;
 import org.openstreetmap.josm.actions.AlignInCircleAction;
 import org.openstreetmap.josm.actions.AlignInLineAction;
@@ -153,7 +152,6 @@ public class MainMenu extends JMenuBar {
     public final JosmAction joinNodeWay = new JoinNodeWayAction();
     public final JosmAction unglueNodes = new UnGlueAction();
     public final JosmAction simplifyWay = new SimplifyWayAction();
-    public final JosmAction addIntersections = new AddIntersectionsAction();
     public final JosmAction joinAreas = new JoinAreasAction();
     public final InfoAction info = new InfoAction();
     public final HistoryInfoAction historyinfo = new HistoryInfoAction();
@@ -317,7 +315,6 @@ public class MainMenu extends JMenuBar {
         add(toolsMenu, mergeNodes);
         add(toolsMenu, joinNodeWay);
         add(toolsMenu, unglueNodes);
-        add(toolsMenu, addIntersections);
         add(toolsMenu, joinAreas);
         toolsMenu.addSeparator();
         add(toolsMenu, info);
