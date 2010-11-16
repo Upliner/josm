@@ -634,6 +634,7 @@ public class GpxLayer extends Layer {
             super(tr("Convert to data layer"), ImageProvider.get("converttoosm"));
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             JPanel msg = new JPanel(new GridBagLayout());
             msg
@@ -689,6 +690,7 @@ public class GpxLayer extends Layer {
             super(tr("Download from OSM along this track"), ImageProvider.get("downloadalongtrack"));
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             JPanel msg = new JPanel(new GridBagLayout());
             Integer dist[] = { 5000, 500, 50 };
@@ -863,6 +865,7 @@ public class GpxLayer extends Layer {
             final Future<?> future = new DownloadOsmTaskList().download(false, toDownload, monitor);
             Main.worker.submit(
                     new Runnable() {
+                        @Override
                         public void run() {
                             try {
                                 future.get();
@@ -1074,6 +1077,7 @@ public class GpxLayer extends Layer {
         /* we must have got at least one waypoint now */
 
         Collections.sort((ArrayList<WayPoint>) waypoints, new Comparator<WayPoint>() {
+            @Override
             public int compare(WayPoint a, WayPoint b) {
                 return a.time <= b.time ? -1 : 1;
             }
@@ -1240,6 +1244,7 @@ public class GpxLayer extends Layer {
             super(tr("Customize line drawing"), ImageProvider.get("mapmode/addsegment"));
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             JRadioButton[] r = new JRadioButton[3];
             r[0] = new JRadioButton(tr("Use global settings."));
@@ -1282,6 +1287,7 @@ public class GpxLayer extends Layer {
             putValue("help", "Action/LayerCustomizeColor");
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             JColorChooser c = new JColorChooser(getColor(getName()));
             Object[] options = new Object[] { tr("OK"), tr("Cancel"), tr("Default") };
@@ -1316,6 +1322,7 @@ public class GpxLayer extends Layer {
             putValue("help", "Action/MarkersFromNamedPoints");
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             GpxData namedTrackPoints = new GpxData();
             for (GpxTrack track : data.tracks) {
@@ -1343,6 +1350,7 @@ public class GpxLayer extends Layer {
             putValue("help", "Action/SplitGPXLayer");
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             Map<String,GpxData> tracks = new HashMap<String,GpxData>();
             for (GpxTrack track : data.tracks) {
@@ -1388,6 +1396,7 @@ public class GpxLayer extends Layer {
             );
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             if (GpxLayer.this.data.fromServer) {
                 warnCantImportIntoServerLayer(GpxLayer.this);
@@ -1419,6 +1428,7 @@ public class GpxLayer extends Layer {
                 // long as they don't overlap, that's fine)
                 if (sel.length > 1) {
                     Arrays.sort(sel, new Comparator<File>() {
+                        @Override
                         public int compare(File a, File b) {
                             return a.lastModified() <= b.lastModified() ? -1 : 1;
                         }
@@ -1486,6 +1496,7 @@ public class GpxLayer extends Layer {
             }
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
 
             if (GpxLayer.this.data.fromServer) {

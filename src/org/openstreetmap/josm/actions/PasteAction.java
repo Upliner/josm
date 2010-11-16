@@ -169,6 +169,7 @@ public final class PasteAction extends JosmAction implements PasteBufferChangedL
         setEnabled(!Main.pasteBuffer.isEmpty());
     }
 
+    @Override
     public void pasteBufferChanged(PrimitiveDeepCopy pasteBuffer) {
         updateEnabledState();
     }

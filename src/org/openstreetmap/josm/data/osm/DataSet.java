@@ -383,6 +383,7 @@ public class DataSet implements Cloneable {
 
     public Collection<OsmPrimitive> getSelectedNodesAndWays() {
         return new DatasetCollection<OsmPrimitive>(getSelected(), new Predicate<OsmPrimitive>() {
+            @Override
             public boolean evaluate(OsmPrimitive primitive) {
                 return primitive instanceof Node || primitive instanceof Way;
             }

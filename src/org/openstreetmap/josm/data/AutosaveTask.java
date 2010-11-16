@@ -184,6 +184,7 @@ public class AutosaveTask extends TimerTask implements LayerChangeListener, List
         }
     }
 
+    @Override
     public void activeLayerChange(Layer oldLayer, Layer newLayer) {
         // Do nothing
     }
@@ -197,12 +198,14 @@ public class AutosaveTask extends TimerTask implements LayerChangeListener, List
         }
     }
 
+    @Override
     public void layerAdded(Layer newLayer) {
         if (newLayer instanceof OsmDataLayer) {
             registerNewlayer((OsmDataLayer) newLayer);
         }
     }
 
+    @Override
     public void layerRemoved(Layer oldLayer) {
         if (oldLayer instanceof OsmDataLayer) {
             synchronized (layersLock) {
@@ -233,6 +236,7 @@ public class AutosaveTask extends TimerTask implements LayerChangeListener, List
         }
     }
 
+    @Override
     public void processDatasetEvent(AbstractDatasetChangedEvent event) {
         changedDatasets.add(event.getDataset());
     }

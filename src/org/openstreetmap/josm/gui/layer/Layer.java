@@ -54,12 +54,15 @@ abstract public class Layer implements Destroyable, MapViewPaintable {
      */
     public static class SeparatorLayerAction extends AbstractAction implements LayerAction {
         public static final SeparatorLayerAction INSTANCE = new SeparatorLayerAction();
+        @Override
         public void actionPerformed(ActionEvent e) {
             throw new UnsupportedOperationException();
         }
+        @Override
         public Component createMenuComponent() {
             return new JSeparator();
         }
+        @Override
         public boolean supportLayers(List<Layer> layers) {
             return false;
         }
@@ -114,6 +117,7 @@ abstract public class Layer implements Destroyable, MapViewPaintable {
      * Paint the dataset using the engine set.
      * @param mv The object that can translate GeoPoints to screen coordinates.
      */
+    @Override
     abstract public void paint(Graphics2D g, MapView mv, Bounds box);
     /**
      * Return a representative small image for this layer. The image must not
@@ -163,6 +167,7 @@ abstract public class Layer implements Destroyable, MapViewPaintable {
      * to the layerlist dialog, because there may be no such dialog yet (loaded
      * via command line parameter).
      */
+    @Override
     public void destroy() {}
 
     public File getAssociatedFile() { return associatedFile; }
@@ -322,6 +327,7 @@ abstract public class Layer implements Destroyable, MapViewPaintable {
             this.layer = layer;
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             new SaveAction().doSave(layer);
         }
@@ -337,6 +343,7 @@ abstract public class Layer implements Destroyable, MapViewPaintable {
             this.layer = layer;
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             new SaveAsAction().doSave(layer);
         }
@@ -352,6 +359,7 @@ abstract public class Layer implements Destroyable, MapViewPaintable {
             this.layer = layer;
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             new GpxExportAction().export(layer);
         }

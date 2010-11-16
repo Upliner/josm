@@ -81,10 +81,12 @@ public class TaggingPresetSearchDialog extends ExtendedDialog {
             return presets;
         }
 
+        @Override
         public Object getElementAt(int index) {
             return presets.get(index).preset;
         }
 
+        @Override
         public int getSize() {
             return presets.size();
         }
@@ -168,6 +170,7 @@ public class TaggingPresetSearchDialog extends ExtendedDialog {
             return isMatching(tags, words);
         }
 
+        @Override
         public int compareTo(PresetClasification o) {
             int result = o.classification - classification;
             if (result == 0)
@@ -214,15 +217,18 @@ public class TaggingPresetSearchDialog extends ExtendedDialog {
         edSearchText = new JTextField();
         edSearchText.getDocument().addDocumentListener(new DocumentListener() {
 
+            @Override
             public void removeUpdate(DocumentEvent e) {
                 filterPresets(edSearchText.getText());
             }
 
+            @Override
             public void insertUpdate(DocumentEvent e) {
                 filterPresets(edSearchText.getText());
 
             }
 
+            @Override
             public void changedUpdate(DocumentEvent e) {
                 filterPresets(edSearchText.getText());
 
@@ -281,6 +287,7 @@ public class TaggingPresetSearchDialog extends ExtendedDialog {
         } else {
             ckOnlyApplicable.setSelected(true);
             ckOnlyApplicable.addItemListener(new ItemListener() {
+                @Override
                 public void itemStateChanged(ItemEvent e) {
                     filterPresets(edSearchText.getText());
                 }
@@ -291,6 +298,7 @@ public class TaggingPresetSearchDialog extends ExtendedDialog {
         ckSearchInTags.setText(tr("Search in tags"));
         ckSearchInTags.setSelected(Main.pref.getBoolean("taggingpreset.dialog.search-in-tags", true));
         ckSearchInTags.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(ItemEvent e) {
                 filterPresets(edSearchText.getText());
             }

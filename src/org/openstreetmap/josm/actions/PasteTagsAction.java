@@ -263,7 +263,7 @@ public final class PasteTagsAction extends JosmAction implements PasteBufferChan
 
     }
 
-    public void pasteBufferChanged(PrimitiveDeepCopy newPasteBuffer) {
+    @Override public void pasteBufferChanged(PrimitiveDeepCopy newPasteBuffer) {
         updateEnabledState();
     }
 

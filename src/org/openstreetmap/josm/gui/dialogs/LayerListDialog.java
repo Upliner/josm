@@ -192,9 +192,11 @@ public class LayerListDialog extends ToggleDialog {
         model.setSelectedLayer(mapView.getActiveLayer());
         model.addLayerListModelListener(
                 new LayerListModelListener() {
+                    @Override
                     public void makeVisible(int index, Layer layer) {
                         layerList.ensureIndexIsVisible(index);
                     }
+                    @Override
                     public void refresh() {
                         layerList.repaint();
                     }
@@ -236,6 +238,7 @@ public class LayerListDialog extends ToggleDialog {
     protected void adaptTo(final IEnabledStateUpdating listener, ListSelectionModel listSelectionModel) {
         listSelectionModel.addListSelectionListener(
                 new ListSelectionListener() {
+                    @Override
                     public void valueChanged(ListSelectionEvent e) {
                         listener.updateEnabledState();
                     }
@@ -254,14 +257,17 @@ public class LayerListDialog extends ToggleDialog {
     protected void adaptTo(final IEnabledStateUpdating listener, ListModel listModel) {
         listModel.addListDataListener(
                 new ListDataListener() {
+                    @Override
                     public void contentsChanged(ListDataEvent e) {
                         listener.updateEnabledState();
                     }
 
+                    @Override
                     public void intervalAdded(ListDataEvent e) {
                         listener.updateEnabledState();
                     }
 
+                    @Override
                     public void intervalRemoved(ListDataEvent e) {
                         listener.updateEnabledState();
                     }
@@ -317,6 +323,7 @@ public class LayerListDialog extends ToggleDialog {
             return true;
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             List<Layer> selectedLayers = getModel().getSelectedLayers();
             if (selectedLayers.isEmpty())
@@ -328,14 +335,17 @@ public class LayerListDialog extends ToggleDialog {
             }
         }
 
+        @Override
         public void updateEnabledState() {
             setEnabled(! getModel().getSelectedLayers().isEmpty());
         }
 
+        @Override
         public Component createMenuComponent() {
             return new JMenuItem(this);
         }
 
+        @Override
         public boolean supportLayers(List<Layer> layers) {
             return true;
         }
@@ -381,6 +391,7 @@ public class LayerListDialog extends ToggleDialog {
             updateEnabledState();
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             if (layer != null) {
                 layer.toggleVisible();
@@ -391,6 +402,7 @@ public class LayerListDialog extends ToggleDialog {
             }
         }
 
+        @Override
         public void updateEnabledState() {
             if (layer == null) {
                 setEnabled(! getModel().getSelectedLayers().isEmpty());
@@ -399,10 +411,12 @@ public class LayerListDialog extends ToggleDialog {
             }
         }
 
+        @Override
         public Component createMenuComponent() {
             return new JMenuItem(this);
         }
 
+        @Override
         public boolean supportLayers(List<Layer> layers) {
             return true;
         }
@@ -481,11 +495,13 @@ public class LayerListDialog extends ToggleDialog {
             }
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             slider.setValue((int)Math.round(getOpacity()*100));
             popup.show(opacityButton, 0, opacityButton.getHeight());
         }
 
+        @Override
         public void updateEnabledState() {
             if (layer == null) {
                 setEnabled(! getModel().getSelectedLayers().isEmpty());
@@ -494,10 +510,12 @@ public class LayerListDialog extends ToggleDialog {
             }
         }
 
+        @Override
         public Component createMenuComponent() {
             return new JMenuItem(this);
         }
 
+        @Override
         public boolean supportLayers(List<Layer> layers) {
             return true;
         }
@@ -535,6 +553,7 @@ public class LayerListDialog extends ToggleDialog {
             updateEnabledState();
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             Layer toActivate;
             if (layer != null) {
@@ -554,6 +573,7 @@ public class LayerListDialog extends ToggleDialog {
             return Main.map.mapView.getActiveLayer() == layer;
         }
 
+        @Override
         public void updateEnabledState() {
             if (layer == null) {
                 if (getModel().getSelectedLayers().size() != 1) {
@@ -567,12 +587,15 @@ public class LayerListDialog extends ToggleDialog {
             }
         }
 
+        @Override
         public void activeLayerChange(Layer oldLayer, Layer newLayer) {
             updateEnabledState();
         }
+        @Override
         public void layerAdded(Layer newLayer) {
             updateEnabledState();
         }
+        @Override
         public void layerRemoved(Layer oldLayer) {
             updateEnabledState();
         }
@@ -599,6 +622,7 @@ public class LayerListDialog extends ToggleDialog {
             updateEnabledState();
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             if (layer != null) {
                 new MergeLayerAction().merge(layer);
@@ -614,6 +638,7 @@ public class LayerListDialog extends ToggleDialog {
             return Main.map.mapView.getActiveLayer() == layer;
         }
 
+        @Override
         public void updateEnabledState() {
             if (layer == null) {
                 if (getModel().getSelectedLayers().size() != 1) {
@@ -651,6 +676,7 @@ public class LayerListDialog extends ToggleDialog {
             updateEnabledState();
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             if (layer != null) {
                 new DuplicateLayerAction().duplicate(layer);
@@ -666,6 +692,7 @@ public class LayerListDialog extends ToggleDialog {
             return Main.map.mapView.getActiveLayer() == layer;
         }
 
+        @Override
         public void updateEnabledState() {
             if (layer == null) {
                 if (getModel().getSelectedLayers().size() == 1) {
@@ -747,10 +774,12 @@ public class LayerListDialog extends ToggleDialog {
             updateEnabledState();
         }
 
+        @Override
         public void updateEnabledState() {
             setEnabled(model.canMoveUp());
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             model.moveUp();
         }
@@ -766,10 +795,12 @@ public class LayerListDialog extends ToggleDialog {
             updateEnabledState();
         }
 
+        @Override
         public void updateEnabledState() {
             setEnabled(model.canMoveDown());
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             model.moveDown();
         }
@@ -1143,6 +1174,7 @@ public class LayerListDialog extends ToggleDialog {
         /* ------------------------------------------------------------------------------ */
         /* Interface LayerChangeListener                                                  */
         /* ------------------------------------------------------------------------------ */
+        @Override
         public void activeLayerChange(Layer oldLayer, Layer newLayer) {
             if (oldLayer != null) {
                 int idx = getLayers().indexOf(oldLayer);
@@ -1160,10 +1192,12 @@ public class LayerListDialog extends ToggleDialog {
             ensureActiveSelected();
         }
 
+        @Override
         public void layerAdded(Layer newLayer) {
             onAddLayer(newLayer);
         }
 
+        @Override
         public void layerRemoved(final Layer oldLayer) {
             onRemoveLayer(oldLayer);
         }
@@ -1171,6 +1205,7 @@ public class LayerListDialog extends ToggleDialog {
         /* ------------------------------------------------------------------------------ */
         /* Interface PropertyChangeListener                                               */
         /* ------------------------------------------------------------------------------ */
+        @Override
         public void propertyChange(PropertyChangeEvent evt) {
             if (evt.getSource() instanceof Layer) {
                 Layer layer = (Layer)evt.getSource();

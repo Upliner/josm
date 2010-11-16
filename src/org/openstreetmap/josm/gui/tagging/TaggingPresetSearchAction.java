@@ -19,6 +19,7 @@ public class TaggingPresetSearchAction extends JosmAction {
         Main.toolbar.register(this);
     }
 
+    @Override
     public void actionPerformed(ActionEvent e) {
 
         if (!Main.main.hasEditLayer())
