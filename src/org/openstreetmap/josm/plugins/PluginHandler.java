@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,11 +68,30 @@ import org.openstreetmap.josm.tools.ImageProvider;
  */
 public class PluginHandler {
 
-    final public static String [] DEPRECATED_PLUGINS = new String[] {"mappaint", "unglueplugin",
-        "lang-de", "lang-en_GB", "lang-fr", "lang-it", "lang-pl", "lang-ro",
-        "lang-ru", "ewmsplugin", "ywms", "tways-0.2", "geotagged", "landsat",
-        "namefinder", "waypoints", "slippy_map_chooser", "tcx-support", "usertools",
-        "AgPifoJ", "utilsplugin", "ghost"};
+    /* deprecated plugins that are removed on start
+       key - plugin name; value - explanation for deprecation (optional, can be null) */
+    public final static Map<String, String> DEPRECATED_PLUGINS = new TreeMap<String, String>();
+    static {
+        String IN_CORE = tr("integrated into main program");
+        for (String[] depr : new String[][] {
+            {"mappaint", IN_CORE}, {"unglueplugin", IN_CORE},
+            {"lang-de", IN_CORE}, {"lang-en_GB", IN_CORE}, {"lang-fr", IN_CORE},
+            {"lang-it", IN_CORE}, {"lang-pl", IN_CORE}, {"lang-ro", IN_CORE},
+            {"lang-ru", IN_CORE},
+            {"ewmsplugin", tr("replaced by {0} plugin","wmsplugin")},
+            {"ywms", tr("replaced by {0} plugin","wmsplugin")},
+            {"tways-0.2", IN_CORE},
+            {"geotagged", IN_CORE},
+            {"landsat", tr("replaced by {0} plugin","lakewalker")},
+            {"namefinder", IN_CORE},
+            {"waypoints", IN_CORE}, {"slippy_map_chooser", IN_CORE},
+            {"tcx-support", tr("replaced by {0} plugin","dataimport")},
+            {"usertools", IN_CORE},
+            {"AgPifoJ", IN_CORE}, {"utilsplugin", IN_CORE}, {"ghost", IN_CORE},
+            {"validator", IN_CORE}}) {
+            DEPRECATED_PLUGINS.put(depr[0], depr.length >= 2 ? depr[1] : null);
+        }
+    }
 
     final public static String [] UNMAINTAINED_PLUGINS = new String[] {"gpsbabelgui", "Intersect_way"};
 
@@ -78,7 +99,6 @@ public class PluginHandler {
      * All installed and loaded plugins (resp. their main classes)
      */
     public final static Collection<PluginProxy> pluginList = new LinkedList<PluginProxy>();
-
 
     /**
      * Removes deprecated plugins from a collection of plugins. Modifies the
@@ -89,8 +109,8 @@ public class PluginHandler {
      * @param plugins the collection of plugins
      */
     private static void filterDeprecatedPlugins(Window parent, Collection<String> plugins) {
-        Set<String> removedPlugins = new HashSet<String>();
-        for (String p : DEPRECATED_PLUGINS) {
+        Set<String> removedPlugins = new TreeSet<String>();
+        for (String p : DEPRECATED_PLUGINS.keySet()) {
             if (plugins.contains(p)) {
                 plugins.remove(p);
                 Main.pref.removeFromCollection("plugins", p);
@@ -102,7 +122,7 @@ public class PluginHandler {
 
         // notify user about removed deprecated plugins
         //
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("<html>");
         sb.append(trn(
                 "The following plugin is no longer necessary and has been deactivated:",
@@ -111,7 +131,12 @@ public class PluginHandler {
         ));
         sb.append("<ul>");
         for (String name: removedPlugins) {
-            sb.append("<li>").append(name).append("</li>");
+            sb.append("<li>").append(name);
+            String explanation = DEPRECATED_PLUGINS.get(name);
+            if (explanation != null) {
+                sb.append(" ("+explanation+")");
+            }
+            sb.append("</li>");
         }
         sb.append("</ul>");
         sb.append("</html>");

@@ -1,5 +1,4 @@
 // License: GPL. See LICENSE file for details.
-
 package org.openstreetmap.josm.gui;
 
 import static org.openstreetmap.josm.gui.help.HelpUtil.ht;
@@ -87,6 +86,7 @@ import org.openstreetmap.josm.actions.search.SearchAction;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.tagging.TaggingPresetSearchAction;
 import org.openstreetmap.josm.tools.Shortcut;
+
 /**
  * This is the JOSM main menu bar. It is overwritten to initialize itself and provide all menu
  * entries as member variables (sort of collect them).
@@ -293,6 +293,9 @@ public class MainMenu extends JMenuBar {
             fullscreen.setAccelerator(fullscreenToggleAction.getShortcut().getKeyStroke());
             fullscreenToggleAction.addButtonModel(fullscreen.getModel());
         }
+        viewMenu.addSeparator();
+        add(viewMenu, info);
+        add(viewMenu, historyinfo);
 
         add(presetsMenu, presetSearchAction);
 
@@ -316,9 +319,6 @@ public class MainMenu extends JMenuBar {
         add(toolsMenu, joinNodeWay);
         add(toolsMenu, unglueNodes);
         add(toolsMenu, joinAreas);
-        toolsMenu.addSeparator();
-        add(toolsMenu, info);
-        add(toolsMenu, historyinfo);
 
         if (!Main.pref.getBoolean("audio.menuinvisible", false)) {
             audioMenu = addMenu(marktr("Audio"), KeyEvent.VK_A, 5, ht("/Menu/Audio"));

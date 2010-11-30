@@ -4,10 +4,9 @@ package org.openstreetmap.josm.data;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
@@ -20,6 +19,7 @@ import java.util.TimerTask;
 import java.util.regex.Pattern;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.actions.OpenFileAction.OpenFileTask;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.event.AbstractDatasetChangedEvent;
 import org.openstreetmap.josm.data.osm.event.DataSetListenerAdapter;
@@ -30,11 +30,11 @@ import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.MapView.LayerChangeListener;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
-import org.openstreetmap.josm.gui.progress.NullProgressMonitor;
-import org.openstreetmap.josm.io.IllegalDataException;
 import org.openstreetmap.josm.io.OsmExporter;
-import org.openstreetmap.josm.io.OsmReader;
 
+/**
+ * Saves data layers periodically so they can be recovered in case of a crash.
+ */
 public class AutosaveTask extends TimerTask implements LayerChangeListener, Listener {
 
     private static final char[] ILLEGAL_CHARACTERS = { '/', '\n', '\r', '\t', '\0', '\f', '`', '?', '*', '\\', '<', '>', '|', '\"', ':' };
@@ -53,8 +53,6 @@ public class AutosaveTask extends TimerTask implements LayerChangeListener, List
         String layerFileName;
         final Deque<File> backupFiles = new LinkedList<File>();
     }
-
-    //"data layer 1_20100711_1330"
 
     private final DataSetListenerAdapter datasetAdapter = new DataSetListenerAdapter(this);
     private Set<DataSet> changedDatasets = new HashSet<DataSet>();
@@ -244,56 +242,80 @@ public class AutosaveTask extends TimerTask implements LayerChangeListener, List
     public List<File> getUnsavedLayersFiles() {
         List<File> result = new ArrayList<File>();
         File[] files = autosaveDir.listFiles();
+        System.err.println("autosave debug (getUnsavedLayersFiles) files="+(files == null ? null : Arrays.toString(files)));
         if (files == null)
             return result;
         for (File file: files) {
+            System.err.println("autosave debug (getUnsavedLayersFiles) file="+file);
+
             if (file.isFile()) {
+                System.err.println("autosave debug (getUnsavedLayersFiles) isFile");
                 result.add(file);
             }
         }
+        System.err.println("autosave debug (getUnsavedLayersFiles) result="+result);
         return result;
     }
 
-    public List<OsmDataLayer> getUnsavedLayers() {
-        List<OsmDataLayer> result = new ArrayList<OsmDataLayer>();
-
-        for (File f: getUnsavedLayersFiles()) {
-            try {
-                DataSet ds = OsmReader.parseDataSet(new FileInputStream(f), NullProgressMonitor.INSTANCE);
-                String layerName = f.getName();
-                layerName = layerName.substring(0, layerName.lastIndexOf('.'));
-                result.add(new OsmDataLayer(ds, layerName, null));
-                moveToDeletedLayersFolder(f);
-            } catch (FileNotFoundException e) {
-                // Should not happen
-                System.err.println("File " + f.getAbsolutePath() + " not found");
-            } catch (IllegalDataException e) {
-                System.err.println(tr("Unable to read autosaved osm data ({0}) - {1}", f.getAbsoluteFile(), e.getMessage()));
-            }
-        }
-
-        return result;
+    public void recoverUnsavedLayers() {
+        List<File> files = getUnsavedLayersFiles();
+        final OpenFileTask openFileTsk = new OpenFileTask(files, null, tr("Restoring files"));
+        Main.worker.submit(openFileTsk);
+        Main.worker.submit(new Runnable() {
+            public void run() {
+                for (File f: openFileTsk.getSuccessfullyOpenedFiles()) {
+                    moveToDeletedLayersFolder(f);
+                }
+            }          
+        });
     }
 
     private void moveToDeletedLayersFolder(File f) {
+        System.err.println("autosave debug (moveToDeletedLayersFolder) f="+f);
+        System.err.println("autosave debug (moveToDeletedLayersFolder) f.getName="+f.getName());
+
         File backupFile = new File(deletedLayersDir, f.getName());
+
+        System.err.println("autosave debug (moveToDeletedLayersFolder) backupFile="+backupFile);
         if (backupFile.exists()) {
-            deletedLayers.remove(backupFile);
-            backupFile.delete();
+            System.err.println("autosave debug (moveToDeletedLayersFolder) backupFile exisist");
+
+            boolean res = deletedLayers.remove(backupFile);
+
+            System.err.println("autosave debug (moveToDeletedLayersFolder) res="+res);
+
+            boolean res2 = backupFile.delete();
+
+            System.err.println("autosave debug (moveToDeletedLayersFolder) res2="+res2);
         }
         if (f.renameTo(backupFile)) {
+            System.err.println("autosave debug (moveToDeletedLayersFolder) rename ok");
+
             deletedLayers.add(backupFile);
+
+            System.err.println("autosave debug (moveToDeletedLayersFolder) deletedLayers="+deletedLayers);
         } else {
             System.err.println(String.format("Warning: Could not move autosaved file %s to %s folder", f.getName(), deletedLayersDir.getName()));
-            f.delete();
+            boolean res3 = f.delete();
+
+            System.err.println("autosave debug (moveToDeletedLayersFolder) res3="+res3);
         }
         while (deletedLayers.size() > PROP_DELETED_LAYERS.get()) {
-            deletedLayers.remove().delete();
+            File next = deletedLayers.remove();
+
+            System.err.println("autosave debug (moveToDeletedLayersFolder) next="+next);
+
+            boolean res4 = next.delete();
+
+            System.err.println("autosave debug (moveToDeletedLayersFolder) res4="+res4);
         }
     }
 
     public void dicardUnsavedLayers() {
-        for (File f: getUnsavedLayersFiles()) {
+        List<File> ulfs = getUnsavedLayersFiles();
+        System.err.println("autosave debug (dicardUnsavedLayers) ulfs="+ulfs);
+        for (File f: ulfs) {
+            System.err.println("autosave debug (dicardUnsavedLayers) f="+f);
             moveToDeletedLayersFolder(f);
         }
     }
