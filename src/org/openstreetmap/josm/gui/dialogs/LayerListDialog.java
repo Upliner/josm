@@ -10,6 +10,7 @@ import java.awt.Font;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
@@ -40,7 +41,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
@@ -59,8 +59,8 @@ import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.help.HelpUtil;
 import org.openstreetmap.josm.gui.io.SaveLayersDialog;
 import org.openstreetmap.josm.gui.layer.Layer;
-import org.openstreetmap.josm.gui.layer.Layer.LayerAction;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.gui.layer.Layer.LayerAction;
 import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 import org.openstreetmap.josm.tools.CheckParameterUtil;
 import org.openstreetmap.josm.tools.ImageProvider;
@@ -202,6 +202,19 @@ public class LayerListDialog extends ToggleDialog {
         layerList.getColumnModel().getColumn(1).setResizable(false);
         layerList.getColumnModel().getColumn(2).setCellRenderer(new LayerNameCellRenderer());
         layerList.getColumnModel().getColumn(2).setCellEditor(new LayerNameCellEditor(new JTextField()));
+        for (KeyStroke ks : new KeyStroke[] {
+                KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.SHIFT_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.SHIFT_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, InputEvent.SHIFT_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, InputEvent.SHIFT_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0),
+                KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0),
+        })
+        {
+            layerList.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(ks, new Object());
+        }
 
         add(new JScrollPane(layerList), BorderLayout.CENTER);
 
@@ -277,13 +290,13 @@ public class LayerListDialog extends ToggleDialog {
      */
     protected void adaptTo(final IEnabledStateUpdating listener, LayerListModel listModel) {
         listModel.addTableModelListener(
-            new TableModelListener() {
+                new TableModelListener() {
 
-                @Override
-                public void tableChanged(TableModelEvent e) {
-                    listener.updateEnabledState();
+                    @Override
+                    public void tableChanged(TableModelEvent e) {
+                        listener.updateEnabledState();
+                    }
                 }
-            }
         );
     }
 
@@ -774,7 +787,7 @@ public class LayerListDialog extends ToggleDialog {
         }
     }
 
-   private static class LayerNameCellRenderer extends DefaultTableCellRenderer {
+    private static class LayerNameCellRenderer extends DefaultTableCellRenderer {
 
         protected boolean isActiveLayer(Layer layer) {
             if (Main.map == null) return false;
@@ -804,8 +817,7 @@ public class LayerListDialog extends ToggleDialog {
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
             JTextField tf = (JTextField) super.getTableCellEditorComponent(table, value, isSelected, row, column);
-            Layer l = (Layer) value;
-            tf.setText(l.getName());
+            tf.setText(value == null ? "" : ((Layer) value).getName());
             return tf;
         }
     }
@@ -1267,7 +1279,7 @@ public class LayerListDialog extends ToggleDialog {
             case 2:
                 l.setName((String) value);
                 break;
-                default: throw new RuntimeException();
+            default: throw new RuntimeException();
             }
             fireTableCellUpdated(row, col);
         }
