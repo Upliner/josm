@@ -196,7 +196,7 @@ public class LayerListDialog extends ToggleDialog {
         layerList.getColumnModel().getColumn(0).setPreferredWidth(12);
         layerList.getColumnModel().getColumn(0).setResizable(false);
         layerList.getColumnModel().getColumn(1).setCellRenderer(new LayerVisibleCellRenderer());
-        layerList.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(new LayerVisibleCheckBox()));
+        layerList.getColumnModel().getColumn(1).setCellEditor(new LayerVisibleCellEditor(new LayerVisibleCheckBox()));
         layerList.getColumnModel().getColumn(1).setMaxWidth(16);
         layerList.getColumnModel().getColumn(1).setPreferredWidth(16);
         layerList.getColumnModel().getColumn(1).setResizable(false);
@@ -463,14 +463,15 @@ public class LayerListDialog extends ToggleDialog {
         private JSlider slider = new JSlider(JSlider.VERTICAL);
 
         /**
-         * Creates a {@see ShowHideLayerAction} which toggle the visibility of
-         * a specific layer.
+         * Creates a {@see LayerOpacityAction} which allows to chenge the
+         * opacity of one or more layers.
          *
          * @param layer  the layer. Must not be null.
          * @exception IllegalArgumentException thrown, if layer is null
          */
         public LayerOpacityAction(Layer layer) throws IllegalArgumentException {
             this();
+            putValue(NAME, tr("Opacity"));
             CheckParameterUtil.ensureParameterNotNull(layer, "layer");
             this.layer = layer;
             updateEnabledState();
@@ -483,7 +484,7 @@ public class LayerListDialog extends ToggleDialog {
          */
         public LayerOpacityAction() {
             putValue(SHORT_DESCRIPTION, tr("Adjust opacity of the layer."));
-            putValue(NAME, tr("Opacity"));
+            putValue(SMALL_ICON, ImageProvider.get("dialogs/layerlist", "transparency"));
             updateEnabledState();
 
             popup = new JPopupMenu();
@@ -745,15 +746,34 @@ public class LayerListDialog extends ToggleDialog {
     }
 
     private static class LayerVisibleCheckBox extends JCheckBox {
+        private final ImageIcon icon_eye;
+        private final ImageIcon icon_eye_translucent;
+        private boolean isTranslucent;
         public LayerVisibleCheckBox() {
             setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-            ImageIcon eye = ImageProvider.get("dialogs/layerlist", "eye");
-            ImageIcon eye_off = ImageProvider.get("dialogs/layerlist", "eye-off");
-            setIcon(eye_off);
-            setSelectedIcon(eye);
-            setRolloverIcon(eye_off);
-            setRolloverSelectedIcon(eye);
+            icon_eye = ImageProvider.get("dialogs/layerlist", "eye");
+            icon_eye_translucent = ImageProvider.get("dialogs/layerlist", "eye-translucent");
+            setIcon(ImageProvider.get("dialogs/layerlist", "eye-off"));
             setPressedIcon(ImageProvider.get("dialogs/layerlist", "eye-pressed"));
+            setSelectedIcon(icon_eye);
+            isTranslucent = false;
+        }
+
+        public void setTranslucent(boolean isTranslucent) {
+            if (this.isTranslucent == isTranslucent) return;
+            if (isTranslucent) {
+                setSelectedIcon(icon_eye_translucent);
+            } else {
+                setSelectedIcon(icon_eye);
+            }
+            this.isTranslucent = isTranslucent;
+        }
+
+        public void updateStatus(Layer layer) {
+            boolean visible = layer.isVisible();
+            setSelected(visible);
+            setTranslucent(layer.getOpacity()<1.0);
+            setToolTipText(visible ? tr("layer is currently visible (click to hide layer)") : tr("layer is currently hidden (click to show layer)"));
         }
     }
 
@@ -773,16 +793,28 @@ public class LayerListDialog extends ToggleDialog {
     }
 
     private static class LayerVisibleCellRenderer implements TableCellRenderer {
-        JCheckBox cb;
+        LayerVisibleCheckBox cb;
         public LayerVisibleCellRenderer() {
-            cb = new LayerVisibleCheckBox();
+            this.cb = new LayerVisibleCheckBox();
         }
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            boolean visible = (Boolean) value;
-            cb.setSelected(visible);
-            cb.setToolTipText(visible ? tr("layer is currently visible (click to hide layer)") : tr("layer is currently hidden (click to show layer)"));
+            cb.updateStatus((Layer)value);
+            return cb;
+        }
+    }
+
+    private static class LayerVisibleCellEditor extends DefaultCellEditor {
+        LayerVisibleCheckBox cb;
+        public LayerVisibleCellEditor(LayerVisibleCheckBox cb) {
+            super(cb);
+            this.cb = cb;
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            cb.updateStatus((Layer)value);
             return cb;
         }
     }
@@ -1252,7 +1284,7 @@ public class LayerListDialog extends ToggleDialog {
         public Object getValueAt(int row, int col) {
             switch (col) {
             case 0: return getLayers().get(row) == getActiveLayer();
-            case 1: return getLayers().get(row).isVisible();
+            case 1: return getLayers().get(row);
             case 2: return getLayers().get(row);
             default: throw new RuntimeException();
             }
