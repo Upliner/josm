@@ -626,7 +626,7 @@ public class Preferences {
         putCollectionDefault(key, def);
         String s = get(key);
         if(s != null && s.length() != 0)
-            return Arrays.asList(s.split("\u001e"));
+            return Arrays.asList(s.split("\u001e", -1));
         return def;
     }
 
@@ -640,7 +640,23 @@ public class Preferences {
         putCollectionDefault(key, null);
         String s = get(key);
         if (s != null && s.length() != 0)
+            return Arrays.asList(s.split("\u001e", -1));
+        return Collections.emptyList();
+    }
+
+    /* old style conversion, replace by above call after some transition time */
+    /* remove this function, when no more old-style preference collections in the code */
+    @Deprecated
+    synchronized public Collection<String> getCollectionOld(String key, String sep) {
+        putCollectionDefault(key, null);
+        String s = get(key);
+        if (s != null && s.length() != 0) {
+            if(!s.contains("\u001e") && s.contains(sep)) {
+                s = s.replace(sep, "\u001e");
+                put(key, s);
+            }
             return Arrays.asList(s.split("\u001e"));
+        }
         return Collections.emptyList();
     }
 

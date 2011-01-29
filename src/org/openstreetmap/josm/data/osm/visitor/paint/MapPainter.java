@@ -206,10 +206,10 @@ public class MapPainter {
             g.drawString (name, p.x+w/2+2, p.y+h/2+2);
             g.setFont(defaultFont);
         }
-        if (selected)
+        if (selected || member)
         {
-            g.setColor (  member ? relationSelectedColor : selectedColor );
-            g.drawRect (p.x-w/2-2, p.y-h/2-2, w+4, h+4);
+            g.setColor(selected? selectedColor : relationSelectedColor);
+            g.drawRect(p.x-w/2-2, p.y-h/2-2, w+4, h+4);
         }
     }
 
@@ -248,6 +248,21 @@ public class MapPainter {
                 g.setFont(defaultFont);
             }
         }
+    }
+
+    private Polygon getPolygon(Way w) {
+        Polygon polygon = new Polygon();
+
+        for (Node n : w.getNodes()) {
+            Point p = nc.getPoint(n);
+            polygon.addPoint(p.x,p.y);
+        }
+        return polygon;
+    }
+
+    public void drawArea(Way w, Color color, String name) {
+        Polygon polygon = getPolygon(w);
+        drawArea(polygon, color, name);
     }
 
     protected void drawArea(Polygon polygon, Color color, String name) {

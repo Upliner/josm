@@ -49,6 +49,25 @@ combo: combo box, with multiple choices and possible to enter free form text
   delete_if_empty: true/false
   use_last_as_default: true/false
 
+multiselect: list of values from which zero or more can be selected
+  key: key to set
+  text: fixed label to display
+  delimiter: character that separates values (default: semicolon) - this
+             will also be used to separate selected values in the tag.
+  values: delimiter-separated list of values (delimiter can be escaped with backslash)
+  display_values: delimiter-separated list of values to be displayed instead of the
+                  database values, order and number must be equal to values
+  short_description: delimiter-separated list of texts to be displayed below each
+                    display_value. (Only if it is not possible to describe 
+                    the entry in 2-3 words.) Instead of a separated list, you can
+                    also write it in the following form: 
+                        <short_description>first description</short_description>
+                                ...
+                        <short_description>last description</short_description>
+  default: default string to display
+  delete_if_empty: true/false
+  use_last_as_default: true/false
+
 check: checkbox
   key: key to set
   text: fixed label to display
@@ -687,7 +706,7 @@ are supplied, then "values" will be treated as "display_values" and translated i
             <optional>
                 <text key="name" text="Name" default="" delete_if_empty="true" />
                 <text key="operator" text="Operator" default="" delete_if_empty="true" />
-                <check key="toilets" default="off" delete_if_empty="true" />
+                <check key="toilets" text="Toilets" default="off" delete_if_empty="true" />
             </optional>
         </item>
         <item name="Rest Area" icon="presets/parking.png" type="node,closedway">
@@ -697,7 +716,7 @@ are supplied, then "values" will be treated as "display_values" and translated i
             <key key="highway" value="rest_area" />
             <optional>
                 <text key="name" text="Name" default="" delete_if_empty="true" />
-                <check key="toilets" default="off" delete_if_empty="true" />
+                <check key="toilets" text="Toilets" default="off" delete_if_empty="true" />
             </optional>
         </item>
         <item name="Emergency Phone" icon="presets/telephone.png" type="node">
@@ -1907,7 +1926,7 @@ are supplied, then "values" will be treated as "display_values" and translated i
             <key key="amenity" value="restaurant" />
             <text key="name" text="Name" default="" delete_if_empty="true" />
             <text key="operator" text="Operator" default="" delete_if_empty="true" />
-            <combo key="cuisine" text="Cuisine" values="italian,chinese,pizza,burger,greek,german,indian,regional,kebab,turkish,asian,thai,mexican,japanese,french,sandwich,sushi" default="" delete_if_empty="true" />
+            <multiselect key="cuisine" text="Cuisine" values="italian;chinese;pizza;burger;greek;german;indian;regional;kebab;turkish;asian;thai;mexican;japanese;french;sandwich;sushi" default=""/>
             <check key="microbrewery" text="Microbrewery" default="off" delete_if_empty="true" />
             <combo key="opening_hours" text="Opening Hours" values="24/7,Mo-Fr 08:30-20:00,Tu-Su 08:00-15:00;Sa 08:00-12:00" default="" delete_if_empty="true" />
             <combo key="stars" text="Stars" values="1,2,3,4,5,6,7" default="" delete_if_empty="true" />
@@ -2103,7 +2122,6 @@ are supplied, then "values" will be treated as "display_values" and translated i
             <check key="hiking" text="Hiking" default="off" delete_if_empty="true" />
             <check key="bicycle" text="Cycling" default="off" delete_if_empty="true" />
             <check key="mtb" text="Mountainbiking" default="off" delete_if_empty="true" />
-            <check key="ski" text="Skiing" default="off" delete_if_empty="true" />
             <check key="ski" text="Skiing" default="off" delete_if_empty="true" />
             <check key="horse" text="Riding" default="off" delete_if_empty="true" />
             <label text="... other transportation modes possible" />
@@ -3082,7 +3100,7 @@ are supplied, then "values" will be treated as "display_values" and translated i
             <link href="http://wiki.openstreetmap.org/wiki/Tag:power%3Dpole"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:power%3Dpole" />
             <label text="Edit Power Pole" />
-            <key key="power" value="tower" />
+            <key key="power" value="pole" />
             <text key="ref" text="Pole reference" default="" delete_if_empty="true" />
         </item>
         <item name="Power Line" icon="presets/power.png" type="way">
@@ -3585,7 +3603,7 @@ are supplied, then "values" will be treated as "display_values" and translated i
         <link href="http://wiki.openstreetmap.org/wiki/Tag:amenity=vending_machine" />
         <label text="Edit Vending machine" />
         <key key="amenity" value="vending_machine" />
-        <combo key="vending" text="Vending products" values="public_transport_tickets,public_transport_plans,parking_tickets,food,drinks,sweets,cigarettes,photos,animal_food,news_papers,toys,stamps,SIM-cards,telephone_vouchers,vouchers,bicycle_tube,condoms,tampons,excrement_bags" default="" delete_if_empty="true" />
+        <multiselect key="vending" text="Vending products" values="public_transport_tickets;public_transport_plans;parking_tickets;food;drinks;sweets;cigarettes;photos;animal_food;news_papers;toys;stamps;SIM-cards;telephone_vouchers;vouchers;bicycle_tube;condoms;tampons;excrement_bags" default="" />
         <text key="operator" text="Operator" default="" delete_if_empty="true" />
         <text key="ref" text="Reference number" default="" delete_if_empty="true" />
         <text key="note" text="Note" default="" delete_if_empty="true" />

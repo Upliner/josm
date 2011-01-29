@@ -1,64 +1,62 @@
 // License: GPL. For details, see LICENSE file.
-package org.openstreetmap.josm.gui.mappaint;
+package org.openstreetmap.josm.gui.mappaint.xml;
 
 import java.awt.Color;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import javax.swing.ImageIcon;
-
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.gui.mappaint.MapPaintStyles.IconReference;
 import org.openstreetmap.josm.tools.ColorHelper;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class ElemStyleHandler extends DefaultHandler
+public class XmlStyleSourceHandler extends DefaultHandler
 {
-    boolean inDoc, inRule, inCondition, inLine, inLineMod, inIcon, inArea, inScaleMax, inScaleMin;
-    boolean hadLine, hadLineMod, hadIcon, hadArea;
-    ElemStyles styles;
-    String styleName;
-    RuleElem rule = new RuleElem();
+    private boolean inDoc, inRule, inCondition, inLine, inLineMod, inIcon, inArea, inScaleMax, inScaleMin;
+    private boolean hadLine, hadLineMod, hadIcon, hadArea;
+    private RuleElem rule = new RuleElem();
+
+    XmlStyleSource style;
 
     static class RuleElem {
-        Rule rule = new Rule();
-        Collection<Rule> rules;
+        XmlCondition cond = new XmlCondition();
+        Collection<XmlCondition> conditions;
         long scaleMax;
         long scaleMin;
-        LineElemStyle line = new LineElemStyle();
-        LineElemStyle linemod = new LineElemStyle();
-        AreaElemStyle area = new AreaElemStyle();
-        IconElemStyle icon = new IconElemStyle();
+        LinePrototype line = new LinePrototype();
+        LinemodPrototype linemod = new LinemodPrototype();
+        AreaPrototype area = new AreaPrototype();
+        IconPrototype icon = new IconPrototype();
         public void init()
         {
-            rules = null;
+            conditions = null;
             scaleMax = 1000000000;
             scaleMin = 0;
             line.init();
-            rule.init();
+            cond.init();
             linemod.init();
             area.init();
             icon.init();
         }
     }
 
-    public ElemStyleHandler(String name) {
-        styleName = name;
+    public XmlStyleSourceHandler(XmlStyleSource style) {
+        this.style = style;
         inDoc=inRule=inCondition=inLine=inIcon=inArea=false;
         rule.init();
-        styles = MapPaintStyles.getStyles();
     }
 
     Color convertColor(String colString)
     {
         int i = colString.indexOf("#");
         Color ret;
-        if(i < 0) {
-            ret = Main.pref.getColor("mappaint."+styleName+"."+colString, Color.red);
+        if (i < 0) {
+            ret = Main.pref.getColor("mappaint."+style.getPrefName()+"."+colString, Color.red);
         } else if(i == 0) {
             ret = ColorHelper.html2color(colString);
         } else {
-            ret = Main.pref.getColor("mappaint."+styleName+"."+colString.substring(0,i),
+            ret = Main.pref.getColor("mappaint."+style.getPrefName()+"."+colString.substring(0,i),
                     ColorHelper.html2color(colString.substring(i)));
         }
         return ret;
@@ -73,30 +71,16 @@ public class ElemStyleHandler extends DefaultHandler
     }
 
     private void error(String message) {
-        System.out.println(styleName + " (" + rule.rule.key + "=" + rule.rule.value + "): " + message);
+        System.out.println(style.getDisplayString() + " (" + rule.cond.key + "=" + rule.cond.value + "): " + message);
     }
 
-    private void startElementLine(String qName, Attributes atts, LineElemStyle line) {
+    private void startElementLine(String qName, Attributes atts, LinePrototype line) {
         for (int count=0; count<atts.getLength(); count++)
         {
             if(atts.getQName(count).equals("width"))
             {
                 String val = atts.getValue(count);
-                if(val.startsWith("+"))
-                {
-                    line.setWidth(Integer.parseInt(val.substring(1)));
-                    line.widthMode = LineElemStyle.WidthMode.OFFSET;
-                }
-                else if(val.startsWith("-"))
-                {
-                    line.setWidth(Integer.parseInt(val));
-                    line.widthMode = LineElemStyle.WidthMode.OFFSET;
-                }
-                else if(val.endsWith("%"))
-                {
-                    line.setWidth(Integer.parseInt(val.substring(0, val.length()-1)));
-                    line.widthMode = LineElemStyle.WidthMode.PERCENT;
-                } else {
+                if (! (val.startsWith("+") || val.startsWith("-") || val.endsWith("%"))) {
                     line.setWidth(Integer.parseInt(val));
                 }
             }
@@ -125,10 +109,38 @@ public class ElemStyleHandler extends DefaultHandler
                 line.dashedColor=convertColor(atts.getValue(count));
             } else if(atts.getQName(count).equals("priority")) {
                 line.priority = Integer.parseInt(atts.getValue(count));
+            } else if (!(atts.getQName(count).equals("mode") && line instanceof LinemodPrototype)){
+                error("The element \"" + qName + "\" has unknown attribute \"" + atts.getQName(count) + "\"!");
+            }
+        }
+    }
+
+    private void startElementLinemod(String qName, Attributes atts, LinemodPrototype line) {
+        startElementLine(qName, atts, line);
+        for (int count=0; count<atts.getLength(); count++)
+        {
+            if(atts.getQName(count).equals("width"))
+            {
+                String val = atts.getValue(count);
+                if(val.startsWith("+"))
+                {
+                    line.setWidth(Integer.parseInt(val.substring(1)));
+                    line.widthMode = LinemodPrototype.WidthMode.OFFSET;
+                }
+                else if(val.startsWith("-"))
+                {
+                    line.setWidth(Integer.parseInt(val));
+                    line.widthMode = LinemodPrototype.WidthMode.OFFSET;
+                }
+                else if(val.endsWith("%"))
+                {
+                    line.setWidth(Integer.parseInt(val.substring(0, val.length()-1)));
+                    line.widthMode = LinemodPrototype.WidthMode.PERCENT;
+                } else {
+                    line.setWidth(Integer.parseInt(val));
+                }
             } else if(atts.getQName(count).equals("mode")) {
                 line.over = !atts.getValue(count).equals("under");
-            } else {
-                error("The element \"" + qName + "\" has unknown attribute \"" + atts.getQName(count) + "\"!");
             }
         }
     }
@@ -140,13 +152,11 @@ public class ElemStyleHandler extends DefaultHandler
                 inRule=true;
             } else if (qName.equals("rules"))
             {
-                if(styleName == null)
-                {
-                    String n = atts.getValue("name");
-                    if(n == null) {
-                        n = "standard";
-                    }
-                    styleName = n;
+                if (style.name == null) {
+                    style.name = atts.getValue("name");
+                }
+                if (style.shortdescription == null) {
+                    style.shortdescription = atts.getValue("shortdescription");
                 }
             }
             else if (qName.equals("scale_max")) {
@@ -156,29 +166,29 @@ public class ElemStyleHandler extends DefaultHandler
             } else if (qName.equals("condition") && inRule)
             {
                 inCondition=true;
-                Rule r = rule.rule;
-                if(r.key != null)
+                XmlCondition c = rule.cond;
+                if(c.key != null)
                 {
-                    if(rule.rules == null) {
-                        rule.rules = new LinkedList<Rule>();
+                    if(rule.conditions == null) {
+                        rule.conditions = new LinkedList<XmlCondition>();
                     }
-                    rule.rules.add(new Rule(rule.rule));
-                    r = new Rule();
-                    rule.rules.add(r);
+                    rule.conditions.add(new XmlCondition(rule.cond));
+                    c = new XmlCondition();
+                    rule.conditions.add(c);
                 }
                 for (int count=0; count<atts.getLength(); count++)
                 {
                     if(atts.getQName(count).equals("k")) {
-                        r.key = atts.getValue(count);
+                        c.key = atts.getValue(count);
                     } else if(atts.getQName(count).equals("v")) {
-                        r.value = atts.getValue(count);
+                        c.value = atts.getValue(count);
                     } else if(atts.getQName(count).equals("b")) {
-                        r.boolValue = atts.getValue(count);
+                        c.boolValue = atts.getValue(count);
                     } else {
                         error("The element \"" + qName + "\" has unknown attribute \"" + atts.getQName(count) + "\"!");
                     }
                 }
-                if(r.key == null) {
+                if(c.key == null) {
                     error("The condition has no key!");
                 }
             }
@@ -186,15 +196,11 @@ public class ElemStyleHandler extends DefaultHandler
             {
                 hadLine = inLine = true;
                 startElementLine(qName, atts, rule.line);
-                if(rule.line.widthMode != LineElemStyle.WidthMode.ABSOLUTE) {
-                    error("Relative widths are not possible for normal lines");
-                    rule.line.widthMode = LineElemStyle.WidthMode.ABSOLUTE;
-                }
             }
             else if (qName.equals("linemod"))
             {
                 hadLineMod = inLineMod = true;
-                startElementLine(qName, atts, rule.linemod);
+                startElementLinemod(qName, atts, rule.linemod);
             }
             else if (qName.equals("icon"))
             {
@@ -202,7 +208,7 @@ public class ElemStyleHandler extends DefaultHandler
                 for (int count=0; count<atts.getLength(); count++)
                 {
                     if (atts.getQName(count).equals("src")) {
-                        ImageIcon icon = MapPaintStyles.getIcon(atts.getValue(count), styleName);
+                        IconReference icon = new IconReference(atts.getValue(count), style);
                         hadIcon = (icon != null);
                         rule.icon.icon = icon;
                     } else if (atts.getQName(count).equals("annotate")) {
@@ -241,23 +247,23 @@ public class ElemStyleHandler extends DefaultHandler
         {
             if(hadLine)
             {
-                styles.add(styleName, rule.rule, rule.rules,
-                        new LineElemStyle(rule.line, rule.scaleMax, rule.scaleMin));
+                style.add(rule.cond, rule.conditions,
+                        new LinePrototype(rule.line, rule.scaleMax, rule.scaleMin));
             }
             if(hadLineMod)
             {
-                styles.addModifier(styleName, rule.rule, rule.rules,
-                        new LineElemStyle(rule.linemod, rule.scaleMax, rule.scaleMin));
+                style.add(rule.cond, rule.conditions,
+                        new LinemodPrototype(rule.linemod, rule.scaleMax, rule.scaleMin));
             }
             if(hadIcon)
             {
-                styles.add(styleName, rule.rule, rule.rules,
-                        new IconElemStyle(rule.icon, rule.scaleMax, rule.scaleMin));
+                style.add(rule.cond, rule.conditions,
+                        new IconPrototype(rule.icon, rule.scaleMax, rule.scaleMin));
             }
             if(hadArea)
             {
-                styles.add(styleName, rule.rule, rule.rules,
-                        new AreaElemStyle(rule.area, rule.scaleMax, rule.scaleMin));
+                style.add(rule.cond, rule.conditions,
+                        new AreaPrototype(rule.area, rule.scaleMax, rule.scaleMin));
             }
             inRule = false;
             hadLine = hadLineMod = hadIcon = hadArea = false;

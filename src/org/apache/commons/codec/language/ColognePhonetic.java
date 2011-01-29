@@ -23,18 +23,14 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.StringEncoder;
 
 /**
- * <h1>ColognePhonetic</h1>
- * 
  * <p>
- * <b>ColognePhonetic</b> provides an implementation of the <a
- * href="http://de.wikipedia.org/wiki/K%C3%B6lner_Phonetik">“Kölner
- * Phonetic”</a> (cologne phonetic) algorithm issued by Hans Joachim Postel in
- * 1969.
+ * Implements of the <a href="http://de.wikipedia.org/wiki/K%C3%B6lner_Phonetik">“Kölner Phonetic”</a> (cologne
+ * phonetic) algorithm issued by Hans Joachim Postel in 1969.
  * </p>
  * 
  * <p>
- * The <i>Kölner Phonetik</i> is a phonetic algorithm which is optimized for the
- * German language. It is related to the well-known soundex algorithm.
+ * The <i>Kölner Phonetik</i> is a phonetic algorithm which is optimized for the German language. It is related to the
+ * well-known soundex algorithm.
  * </p>
  * 
  * <h2>Algorithm</h2>
@@ -44,9 +40,8 @@ import org.apache.commons.codec.StringEncoder;
  * <li>
  * <h3>First step:</h3>
  * After a preprocessing (convertion to upper case, transcription of <a
- * href="http://en.wikipedia.org/wiki/Germanic_umlaut">germanic umlauts</a>,
- * removal of non alphabetical characters) the letters of the supplied text are
- * replaced by their phonetic code according to the folowing table.
+ * href="http://en.wikipedia.org/wiki/Germanic_umlaut">germanic umlauts</a>, removal of non alphabetical characters) the
+ * letters of the supplied text are replaced by their phonetic code according to the folowing table.
  * <table border="1">
  * <tbody>
  * <tr>
@@ -152,9 +147,8 @@ import org.apache.commons.codec.StringEncoder;
  * </tbody>
  * </table>
  * <p>
- * <small><i>(Source: <a href=
- * "http://de.wikipedia.org/wiki/K%C3%B6lner_Phonetik#Buchstabencodes"
- * >Wikipedia (de): Kölner Phonetik – Buchstabencodes</a>)</i></small>
+ * <small><i>(Source: <a href= "http://de.wikipedia.org/wiki/K%C3%B6lner_Phonetik#Buchstabencodes" >Wikipedia (de):
+ * Kölner Phonetik – Buchstabencodes</a>)</i></small>
  * </p>
  * 
  * <h4>Example:</h4>
@@ -178,75 +172,34 @@ import org.apache.commons.codec.StringEncoder;
  * 
  * </ul>
  * 
- * @see<ul> <li><a
- *          href="http://de.wikipedia.org/wiki/K%C3%B6lner_Phonetik"><span
- *          style="font-variant:small-caps">Wikipedia</span> (de): <i>Kölner
- *          Phonetik</i></a>—for German description of the algorithm and more
- *          sources.</li> <li>{@linkplain #colognePhonetic(String)}—for the
- *          description of the actual implementation</li> <li>
- *          {@linkplain #isCologneEqual(String, String)}</li> <li>
- *          {@linkplain StringEncoder}—for the interface implemented by this
- *          class</li> </ul>
- * 
- * @author Falk Meyer, IT2media
- * @version beta 2010/9/13
+ * @see <a href="http://de.wikipedia.org/wiki/K%C3%B6lner_Phonetik"><span
+ *      style="font-variant:small-caps">Wikipedia</span> (de): <i>Kölner Phonetik</i></a> (a German description of the
+ *      algorithm and more sources)
+ * @author Apache Software Foundation
+ * @since 1.5
  */
-
 public class ColognePhonetic implements StringEncoder {
 
-    private class CologneLeftBuffer implements CharSequence {
+    private abstract class CologneBuffer {
 
-        private final char[] data;
-        private int length = 0;
+        protected final char[] data;
+        
+        protected int length = 0;
 
-        public CologneLeftBuffer(int buffSize) {
-            data = new char[buffSize];
-        }
-
-        public CologneLeftBuffer(char[] data) {
+        public CologneBuffer(char[] data) {
             this.data = data;
             this.length = data.length;
         }
 
+        public CologneBuffer(int buffSize) {
+            this.data = new char[buffSize];
+            this.length = 0;
+        }
+
+        protected abstract char[] copyData(int start, final int length);
+
         public int length() {
             return length;
-        }
-
-        public char charAt(int index) {
-            if (index < length) {
-                return data[index];
-            } else {
-                throw new IndexOutOfBoundsException();
-            }
-        }
-
-        public CharSequence subSequence(int start, int end) {
-            final int length = end - start;
-
-            char[] retData = copyData(start, length);
-
-            return new CologneLeftBuffer(retData);
-        }
-
-        private char[] copyData(int start, final int length) {
-            char[] retData = new char[length];
-
-            System.arraycopy(data, start, retData, 0, length);
-            return retData;
-        }
-
-        public char getLast() {
-            return data[length - 1];
-        }
-
-        public void putRight(char chr) {
-            data[length] = chr;
-            length++;
-        }
-
-        public char dropLast() {
-            length--;
-            return data[length];
         }
 
         public String toString() {
@@ -254,67 +207,54 @@ public class ColognePhonetic implements StringEncoder {
         }
     }
 
-    private class CologneRightBuffer implements CharSequence {
+    private class CologneLeftBuffer extends CologneBuffer {
 
-        private int length = 0;
-        private final char[] data;
-
-        public CologneRightBuffer(int buffSize) {
-            data = new char[buffSize];
+        public CologneLeftBuffer(int buffSize) {
+            super(buffSize);
         }
+
+        public void addRight(char chr) {
+            data[length] = chr;
+            length++;
+        }
+
+        protected char[] copyData(int start, final int length) {
+            char[] retData = new char[length];
+            System.arraycopy(data, start, retData, 0, length);
+            return retData;
+        }
+    }
+
+    private class CologneRightBuffer extends CologneBuffer {
 
         public CologneRightBuffer(char[] data) {
-            this.data = data;
-            this.length = data.length;
+            super(data);
         }
 
-        public int length() {
-            return length;
+        public void addLeft(char ch) {
+            length++;
+            data[getNextPos()] = ch;
         }
 
-        public char charAt(int index) {
-            if (index < length) {
-                return data[data.length - length + index];
-            } else {
-                throw new IndexOutOfBoundsException();
-            }
-        }
-
-        public CharSequence subSequence(int start, int end) {
-            final int length = end - start;
-            char[] newData = copyData(start, length);
-
-            return new CologneRightBuffer(newData);
-        }
-
-        private char[] copyData(int start, final int length) {
+        protected char[] copyData(int start, final int length) {
             char[] newData = new char[length];
-
-            System.arraycopy(data, data.length - this.length + start, newData,
-                    0, length);
+            System.arraycopy(data, data.length - this.length + start, newData, 0, length);
             return newData;
         }
 
-        public void putLeft(char chr) {
-            length++;
-            data[data.length - length] = chr;
+        public char getNextChar() {
+            return data[getNextPos()];
         }
 
-        public char getNext() {
-            return data[data.length - length];
+        protected int getNextPos() {
+            return data.length - length;
         }
-
-        public char dropNext() {
-            char ret = data[data.length - length];
+        
+        public char removeNext() {
+            char ch = getNextChar();
             length--;
-
-            return ret;
+            return ch;
         }
-
-        public String toString() {
-            return new String(copyData(0, length));
-        }
-
     }
 
     private static final char[][] PRE_REPLACEMENTS = new char[][] {
@@ -324,20 +264,16 @@ public class ColognePhonetic implements StringEncoder {
             new char[] { '\u00DF', 'S' }      // ß
     };
 
-    public Object encode(Object pObject) throws EncoderException {
-        if (!(pObject instanceof String)) {
-            throw new EncoderException(
-                    "This method’s parameter was expected to be of the type "
-                            + String.class.getName()
-                            + ". But actually it was of the type "
-                            + pObject.getClass().getName() + ".");
+    /*
+     * Returns whether the array contains the key, or not.
+     */
+    private static boolean arrayContains(char[] arr, char key) {
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == key) {
+                return true;
+            }
         }
-
-        return encode((String) pObject);
-    }
-
-    public String encode(String text) {
-        return colognePhonetic(text);
+        return false;
     }
 
     /**
@@ -354,13 +290,12 @@ public class ColognePhonetic implements StringEncoder {
      * @return the corresponding encoding according to the <i>Kölner
      *         Phonetik</i> algorithm
      */
-
     public String colognePhonetic(String text) {
         if (text == null) {
             return null;
         }
 
-        text = preProcess(text);
+        text = preprocess(text);
 
         CologneLeftBuffer left = new CologneLeftBuffer(text.length() * 2);
         CologneRightBuffer right = new CologneRightBuffer(text.toCharArray());
@@ -375,10 +310,10 @@ public class ColognePhonetic implements StringEncoder {
         int rightLength = right.length();
 
         while (rightLength > 0) {
-            chr = right.dropNext();
+            chr = right.removeNext();
 
             if ((rightLength = right.length()) > 0) {
-                nextChar = right.getNext();
+                nextChar = right.getNextChar();
             } else {
                 nextChar = '-';
             }
@@ -402,7 +337,7 @@ public class ColognePhonetic implements StringEncoder {
             } else if (chr == 'X'
                     && !arrayContains(new char[] { 'C', 'K', 'Q' }, lastChar)) {
                 code = '4';
-                right.putLeft('S');
+                right.addLeft('S');
                 rightLength++;
             } else if (chr == 'S' || chr == 'Z') {
                 code = '8';
@@ -438,34 +373,39 @@ public class ColognePhonetic implements StringEncoder {
             if (code != '-'
                     && (lastCode != code && (code != '0' || lastCode == '/')
                             || code < '0' || code > '8')) {
-                left.putRight(code);
+                left.addRight(code);
             }
 
             lastChar = chr;
             lastCode = code;
         }
-
         return left.toString();
     }
 
-    /*
-     * Returns whether the array contains the key, or not.
-     */
-    private static boolean arrayContains(char[] arr, char key) {
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i] == key) {
-                return true;
-            }
+    public Object encode(Object object) throws EncoderException {
+        if (!(object instanceof String)) {
+            throw new EncoderException(
+                    "This method’s parameter was expected to be of the type "
+                            + String.class.getName()
+                            + ". But actually it was of the type "
+                            + object.getClass().getName() + ".");
         }
+        return encode((String) object);
+    }
 
-        return false;
+    public String encode(String text) {
+        return colognePhonetic(text);
+    }
+
+    public boolean isCologneEqual(String text1, String text2) {
+        return colognePhonetic(text1).equals(colognePhonetic(text2));
     }
 
     /*
      * Converts the string to upper case and replaces germanic umlauts, and the
      * “ß”.
      */
-    private String preProcess(String text) {
+    private String preprocess(String text) {
         text = text.toUpperCase(Locale.GERMAN);
 
         char[] chrs = text.toCharArray();
@@ -484,9 +424,5 @@ public class ColognePhonetic implements StringEncoder {
         text = new String(chrs);
 
         return text;
-    }
-
-    public boolean isCologneEqual(String text1, String text2) {
-        return colognePhonetic(text1).equals(colognePhonetic(text2));
     }
 }

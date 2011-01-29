@@ -42,7 +42,7 @@ public class WMSGrabber extends Grabber {
 
     public WMSGrabber(MapView mv, WMSLayer layer) {
         super(mv, layer);
-        this.baseURL = layer.getInfo().getURL();
+        this.baseURL = layer.getInfo().getUrl();
         /* URL containing placeholders? */
         urlWithPatterns = ImageryInfo.isUrlWithPatterns(baseURL);
     }
@@ -180,7 +180,7 @@ public class WMSGrabber extends Grabber {
             throw new IOException(readException(conn));
 
         InputStream is = new ProgressInputStream(conn, null);
-        BufferedImage img = ImageIO.read(is);
+        BufferedImage img = layer.normalizeImage(ImageIO.read(is));
         is.close();
 
         cache.saveImg(url.toString(), img);

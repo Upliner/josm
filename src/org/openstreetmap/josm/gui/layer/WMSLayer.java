@@ -7,6 +7,7 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -122,13 +123,13 @@ public class WMSLayer extends ImageryLayer implements PreferenceChangedListener 
         }
         resolution = mv.getDist100PixelText();
 
-        if(info.getURL() != null) {
-            WMSGrabber.getProjection(info.getURL(), true);
+        if(info.getUrl() != null) {
+            WMSGrabber.getProjection(info.getUrl(), true);
             startGrabberThreads();
-            if(info.getImageryType() == ImageryType.WMS && !ImageryInfo.isUrlWithPatterns(info.getURL())) {
-                if (!(info.getURL().endsWith("&") || info.getURL().endsWith("?"))) {
-                    if (!confirmMalformedUrl(info.getURL())) {
-                        System.out.println(tr("Warning: WMS layer deactivated because of malformed base url ''{0}''", info.getURL()));
+            if(info.getImageryType() == ImageryType.WMS && !ImageryInfo.isUrlWithPatterns(info.getUrl())) {
+                if (!(info.getUrl().endsWith("&") || info.getUrl().endsWith("?"))) {
+                    if (!confirmMalformedUrl(info.getUrl())) {
+                        System.out.println(tr("Warning: WMS layer deactivated because of malformed base url ''{0}''", info.getUrl()));
                         usesInvalidUrl = true;
                         setName(getName() + tr("(deactivated)"));
                         return;
@@ -198,7 +199,7 @@ public class WMSLayer extends ImageryLayer implements PreferenceChangedListener 
     }
 
     @Override public void paint(Graphics2D g, final MapView mv, Bounds b) {
-        if(info.getURL() == null || (usesInvalidUrl && !isInvalidUrlConfirmed)) return;
+        if(info.getUrl() == null || (usesInvalidUrl && !isInvalidUrlConfirmed)) return;
 
         settingsChanged = false;
 
@@ -274,13 +275,11 @@ public class WMSLayer extends ImageryLayer implements PreferenceChangedListener 
     }
 
     public int getImageWidth(int xIndex) {
-        int overlap = (int)(PROP_OVERLAP.get()?PROP_OVERLAP_EAST.get() * imageSize * getPPD() / info.getPixelPerDegree() / 100:0);
-        return getImageX(xIndex + 1) - getImageX(xIndex) + overlap;
+        return getImageX(xIndex + 1) - getImageX(xIndex);
     }
 
     public int getImageHeight(int yIndex) {
-        int overlap = (int)(PROP_OVERLAP.get()?PROP_OVERLAP_NORTH.get() * imageSize * getPPD() / info.getPixelPerDegree() / 100:0);
-        return getImageY(yIndex + 1) - getImageY(yIndex) + overlap;
+        return getImageY(yIndex + 1) - getImageY(yIndex);
     }
 
     /**
@@ -299,6 +298,24 @@ public class WMSLayer extends ImageryLayer implements PreferenceChangedListener 
     public int getBaseImageHeight() {
         int overlap = (PROP_OVERLAP.get()?PROP_OVERLAP_NORTH.get() * imageSize / 100:0);
         return imageSize + overlap;
+    }
+
+    public int getImageSize() {
+        return imageSize;
+    }
+
+    /**
+     * 
+     * @return When overlapping is enabled, return visible part of tile. Otherwise return original image
+     */
+    public BufferedImage normalizeImage(BufferedImage img) {
+        if (WMSLayer.PROP_OVERLAP.get() && (WMSLayer.PROP_OVERLAP_EAST.get() > 0 || WMSLayer.PROP_OVERLAP_NORTH.get() > 0)) {
+            BufferedImage copy = img;
+            img = new BufferedImage(imageSize, imageSize, copy.getType());
+            img.createGraphics().drawImage(copy, 0, 0, imageSize, imageSize,
+                    0, copy.getHeight() - imageSize, imageSize, copy.getHeight(), null);
+        }
+        return img;
     }
 
 
@@ -610,7 +627,7 @@ public class WMSLayer extends ImageryLayer implements PreferenceChangedListener 
                     oos.writeInt(imageSize);
                     oos.writeDouble(info.getPixelPerDegree());
                     oos.writeObject(info.getName());
-                    oos.writeObject(info.getFullURL());
+                    oos.writeObject(info.getFullUrl());
                     oos.writeObject(images);
                     oos.close();
                 }
@@ -649,7 +666,7 @@ public class WMSLayer extends ImageryLayer implements PreferenceChangedListener 
                 imageSize = ois.readInt();
                 info.setPixelPerDegree(ois.readDouble());
                 doSetName((String)ois.readObject());
-                info.setURL((String) ois.readObject());
+                info.setUrl((String) ois.readObject());
                 images = (GeorefImage[][])ois.readObject();
                 ois.close();
                 fis.close();
@@ -662,7 +679,7 @@ public class WMSLayer extends ImageryLayer implements PreferenceChangedListener 
                 }
                 settingsChanged = true;
                 mv.repaint();
-                if(info.getURL() != null)
+                if(info.getUrl() != null)
                 {
                     startGrabberThreads();
                 }
@@ -715,6 +732,14 @@ public class WMSLayer extends ImageryLayer implements PreferenceChangedListener 
         public void actionPerformed(ActionEvent e) {
             autoDownloadEnabled = !autoDownloadEnabled;
             if (autoDownloadEnabled) {
+                for (int x = 0; x < dax; ++x) {
+                    for (int y = 0; y < day; ++y) {
+                        GeorefImage img = images[modulo(x,dax)][modulo(y,day)];
+                        if(img.getState() == State.NOT_IN_CACHE){
+                            addRequest(new WMSRequest(img.getXIndex(), img.getYIndex(), info.getPixelPerDegree(), false));
+                        }
+                    }
+                }
                 mv.repaint();
             }
         }
